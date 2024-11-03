@@ -9,7 +9,46 @@
     <h1>Upload a File</h1>
     <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
         <input type="file" name="file">
+        
+        <label for="file-type">Choose file type:</label>
+        <select id="file-type" name="file-type" onchange="updateFormats()">
+            <option value="audio">Audio</option>
+            <option value="video">Video</option>
+            <option value="image">Image</option>
+        </select>
+        
+        <label for="file-format">Choose file format:</label>
+        <select id="file-format" name="file-format">
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        
         <button type="submit">Upload</button>
     </form>
+        
+    <a href="{{ url_for('home') }}">Home</a>
+
+    <script>
+        const formats = {
+            audio: ['mp3', 'aac', 'flac', 'wav', 'ogg'],
+            video: ['mp4', 'avi', 'mkv', 'mov', 'flv'],
+            image: ['jpg', 'png', 'gif', 'bmp', 'tiff']
+        };
+
+        function updateFormats() {
+            const fileType = document.getElementById('file-type').value;
+            const fileFormat = document.getElementById('file-format');
+            fileFormat.innerHTML = '';
+
+            formats[fileType].forEach(format => {
+                const option = document.createElement('option');
+                option.value = format;
+                option.textContent = format;
+                fileFormat.appendChild(option);
+            });
+        }
+
+        // Initialize formats on page load
+        document.addEventListener('DOMContentLoaded', updateFormats);
+    </script>
 </body>
 </html>

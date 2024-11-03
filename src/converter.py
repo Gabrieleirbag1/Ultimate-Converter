@@ -1,28 +1,39 @@
-import ffmpeg
 import os
+import random
+import ffmpeg
 
 class Converter:
-    def __init__(self, input_file, type_file1, type_file2):
-        self.input_file = input_file
-        self.type_file1 = type_file1
-        self.type_file2 = type_file2
+    def __init__(self, input_file_name, type_input_file, type_output_file):
+        self.input_file_name = input_file_name
+        self.type_input_file = type_input_file
+        self.type_output_file = type_output_file
+
+        self.input_dir = 'uploads'
         self.output_dir = 'output'
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
+    def get_unique_output_file(self, base_name, extension):
+        output_file = os.path.join(self.output_dir, f'{base_name}_converted.{extension}')
+        while os.path.exists(output_file):
+            random_number = random.randint(1, 10000)
+            output_file = os.path.join(self.output_dir, f'{base_name}_converted_{random_number}.{extension}')
+        return output_file
+
     def convert(self):
-        output_file = os.path.join(self.output_dir, f'converted.{self.type_file2}')
-        print(f'Converting file: {self.input_file} to {output_file}')
+        input_file = os.path.join(self.input_dir, f"{self.input_file_name}")
+        base_name = self.input_file_name.split(".")[0]
+        output_file = self.get_unique_output_file(base_name, self.type_output_file)
+        print(f'Converting file: {self.input_file_name} to {output_file}')
         try:
-            ffmpeg.input(self.input_file).output(output_file).run()
+            ffmpeg.input(input_file).output(output_file).run()
             print(f'File converted successfully: {output_file}')
         except ffmpeg.Error as e:
             print(f'Error during conversion: {e.stderr.decode()}')
+        except Exception as e:
+            print(f'Error: {e}')
 
-# Example usage
 if __name__ == '__main__':
-    input_file = os.path.join(os.path.dirname(__file__), 'test.jpg')
-    type_file1 = 'jpg'  # Example input type
-    type_file2 = 'png'  # Example output type
-    converter = Converter(input_file, type_file1, type_file2)
+    # Example usage
+    converter = Converter('example.mp4', 'video', 'avi')
     converter.convert()
