@@ -1,16 +1,24 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_uploads import UploadSet, configure_uploads, IMAGES, AUDIO, DATA
-from werkzeug.utils import secure_filename
-from werkzeug.datastructures import  FileStorage
+from flask_uploads import UploadSet, configure_uploads
 from converter import Converter
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['UPLOADED_FILES_DEST'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 250 * 1024 * 1024
 db = SQLAlchemy(app)
 
-files = UploadSet('files', IMAGES + AUDIO + DATA)
+AUDIO = ('mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'alac', 'aiff', 'amr', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm', 'vorbis')
+VIDEO = ('mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf')
+IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'pnm', 'tga')
+VECTOR = ('svg', 'eps', 'pdf', 'ai', 'emf', 'wmf')
+SUBTITLE = ('srt', 'ass', 'ssa', 'sub', 'vtt', 'stl', 'dfxp', 'sami', 'mpl2', 'pjs', 'jacosub')
+ARCHIVE = ('tar', 'zip', 'gz', 'bz2', 'rar', '7z')
+
+ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + SUBTITLE + ARCHIVE
+
+files = UploadSet('files', ALLOWED_EXTENSIONS)
 configure_uploads(app, files)
 
 class Media(db.Model):
@@ -38,7 +46,9 @@ def upload():
         filename = files.save(file)
         filetype = file.content_type
         filepath = f'uploads/{filename}'
-        Converter(filename, filetype, 'png').convert()
+        output_format = request.form['file-format']
+        print(output_format, "output_format")
+        Converter(filename, filetype, output_format).convert()
 
         create_media(filename, filetype, filepath)
         return redirect(url_for('home'))

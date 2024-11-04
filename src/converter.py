@@ -29,11 +29,13 @@ class Converter:
             ffmpeg.input(input_file).output(output_file).run()
             print(f'File converted successfully: {output_file}')
         except ffmpeg.Error as e:
-            print(f'Error during conversion: {e.stderr.decode()}')
+            error_message = e.stderr.decode() if e.stderr else str(e)
+            print(f'Error: {error_message}')
         except Exception as e:
             print(f'Error: {e}')
+            raise Exception("An unexpected error occurred. Please try again.")
 
 if __name__ == '__main__':
     # Example usage
-    converter = Converter('example.mp4', 'video', 'avi')
+    converter = Converter('example.mp4', 'video', 'png')
     converter.convert()
