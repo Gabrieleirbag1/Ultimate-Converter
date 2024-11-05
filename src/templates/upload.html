@@ -1,35 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="static/scripts/upload.js"></script>
+{% extends "layout.html" %}
+
+{% block title %}Upload{% endblock %}
+
+{% block styles %}
     <style>
         #file-preview {
             display: none;
         }
     </style>
-    <title>Upload</title>
-</head>
-<body>
-    <h1>Upload a File</h1>
-    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="file-input" onchange="handleFileUpload()">
-        <div id="file-preview">
-            <label for="file-type">Choose file type:</label>
-            <select id="file-type" name="file-type" onchange="updateFormats()">
-                <!-- Options will be populated by JavaScript -->
-            </select>
-            
-            <label for="file-format">Choose file format:</label>
-            <select id="file-format" name="file-format">
-                <!-- Options will be populated by JavaScript -->
-            </select>
+{% endblock %}
+
+{% block scripts %} 
+    <script src="static/scripts/upload.js"></script>
+{% endblock %}
+
+{% block content %}
+    <section>
+        <div class="upload-div">
+            <h1>Upload a File</h1>
+            <form class="upload-form" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                <label for="file-input">
+                    <img src="static/images/upload.png" alt="Upload file">
+                </label>
+                <input type="file" name="file" id="file-input" onchange="handleFileUpload()">
+                <div id="file-preview">
+                    <label for="file-type">Choose file type:</label>
+                    <select id="file-type" name="file-type" onchange="updateFormats()">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                    
+                    <label for="file-format">Choose file format:</label>
+                    <select id="file-format" name="file-format">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <button type="submit">Upload</button>
+            </form>
         </div>
-        
-        <button type="submit">Upload</button>
-    </form>
-        
-    <a href="{{ url_for('home') }}">Home</a>
-</body>
-</html>
+    </section>
+{% endblock %}

@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download</title>
-</head>
-<body>
+{% extends "layout.html" %}
+
+{% block title %}Download{% endblock %}
+
+{% block content %}
     <h1>Download Your Converted File</h1>
-    <a class="btn btn-success" href="{{ url_for('download', filename=filename) }}">Download</a>
-    <br>
-    <a href="{{ url_for('home') }}">Home</a>
-</body>
-</html>
+    <a class="btn btn-success" href="{{ url_for('download', token=token) }}">Download</a>
+{% endblock %}

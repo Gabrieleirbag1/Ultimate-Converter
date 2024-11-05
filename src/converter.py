@@ -8,7 +8,9 @@ class Converter:
         self.type_input_file = type_input_file
         self.type_output_file = type_output_file
 
+        self.input_file = None
         self.output_file = None
+        self.output_file_name = None
         self.input_dir = os.path.join(os.path.dirname(__file__), 'uploads')
         self.output_dir = os.path.join(os.path.dirname(__file__), 'output')
         if not os.path.exists(self.output_dir):
@@ -25,6 +27,7 @@ class Converter:
         input_file = os.path.join(self.input_dir, f"{self.input_file_name}")
         base_name = self.input_file_name.split(".")[0]
         self.output_file = self.get_unique_output_file(base_name, self.type_output_file)
+        self.output_file_name = os.path.basename(self.output_file)
         print(f'Converting file: {self.input_file_name} to {self.output_file}')
         try:
             ffmpeg.input(input_file).output(self.output_file).run()

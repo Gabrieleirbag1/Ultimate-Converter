@@ -1,4 +1,4 @@
-from utils import db
+from db import db
 
 class DownloadToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
