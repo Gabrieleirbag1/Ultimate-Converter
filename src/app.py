@@ -42,6 +42,7 @@ def create_token(converter: Converter) -> str:
     return token
 
 def remove_uploaded_file(filepath):
+    print("FILEPATH", filepath)
     if os.path.exists(filepath):
         os.remove(filepath)
 
@@ -79,12 +80,11 @@ def upload():
             return redirect(url_for('upload'))
         
         filetype = file.content_type
-        filepath = os.path.join("uploads", filename)
         output_format = request.form['file-format']
 
         converter = Converter(filename, filetype, output_format)
         if converter.convert():
-            remove_uploaded_file(filepath)
+            remove_uploaded_file(converter.input_file)
             create_media(converter.output_file_name, filetype, converter.output_file)
             token = create_token(converter)
             return redirect(url_for('download_page', token=token))

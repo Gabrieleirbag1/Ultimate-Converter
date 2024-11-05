@@ -24,13 +24,13 @@ class Converter:
         return output_file
 
     def convert(self):
-        input_file = os.path.join(self.input_dir, f"{self.input_file_name}")
+        self.input_file = os.path.join(self.input_dir, f"{self.input_file_name}")
         base_name = self.input_file_name.split(".")[0]
         self.output_file = self.get_unique_output_file(base_name, self.type_output_file)
         self.output_file_name = os.path.basename(self.output_file)
         print(f'Converting file: {self.input_file_name} to {self.output_file}')
         try:
-            ffmpeg.input(input_file).output(self.output_file).run()
+            ffmpeg.input(self.input_file).output(self.output_file).run()
             print(f'File converted successfully: {self.output_file}')
             return True
         except ffmpeg.Error as e:
