@@ -1,0 +1,1 @@
+path = str(r"C:\VSCODE\Ultimate-Converter\output\image.png")
