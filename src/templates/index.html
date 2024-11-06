@@ -3,6 +3,5 @@
 {% block title %}Download{% endblock %}
 
 {% block content %}
-    <h1>Upload Media</h1>
-    <a href="{{ url_for('upload') }}">Upload a file</a>
+    <button class="btn" onclick="window.location.href='{{ url_for('upload') }}';">Convert a file</button>
 {% endblock %}

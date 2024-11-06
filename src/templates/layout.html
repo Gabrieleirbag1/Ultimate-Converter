@@ -9,10 +9,14 @@
     {% block scripts %}{% endblock %}
 </head>
 <body>
-    <header>
-        <h1>Ultimate Converter</h1>
+  <header class="header-main">
+    <h1>Ultimate Converter</h1>
+    <nav>
+        <a href="{{ url_for('upload') }}">Upload</a>
+        <a href="{{ url_for('web') }}">Web</a>
         <a href="{{ url_for('home') }}">Home</a>
-    </header>
+    </nav>
+</header>
     <div class="container">
         {% block content %}
         {% endblock %}

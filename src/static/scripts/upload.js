@@ -12,6 +12,8 @@ let types = [];
 function handleFileUpload() {
     const file_type = document.getElementById('file-type');
     const file_preview = document.getElementById('file-preview');
+    const drop_area = document.getElementById('drop-area');
+    const h4_filename = document.getElementById('h4-filename');
 
     file_name = document.getElementById('file-input').files[0].name;
     const extension = file_name.split(".").pop();
@@ -51,6 +53,8 @@ function handleFileUpload() {
         return;
     }
 
+    h4_filename.textContent = file_name;
+    drop_area.style.display = 'none';
     file_preview.style.display = 'block';
 
     types.forEach(format => {
@@ -74,3 +78,53 @@ function updateFormats() {
         file_format.appendChild(option);
     });
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    const dropBox = document.getElementById("drop-box"),
+        button = document.getElementById("btn-choose-file"),
+        input = document.getElementById("file-input");
+
+    button.onclick = () => {
+        input.click();
+    };
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropBox.addEventListener(eventName, preventDefaults, false)
+        document.body.addEventListener(eventName, preventDefaults, false)
+    });
+
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropBox.addEventListener(eventName, highlight, false)
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropBox.addEventListener(eventName, unhighlight, false)
+    });
+
+    // Handle dropped files
+    dropBox.addEventListener('drop', handleDrop, false);
+
+    function preventDefaults(e) {
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+    function highlight(e) {
+        dropBox.classList.add('highlight')
+        console.log('highlight');
+    }
+
+    function unhighlight(e) {
+        dropBox.classList.remove('highlight')
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer
+        const files = dt.files
+
+        input.files = files;
+        handleFileUpload();
+    }
+});

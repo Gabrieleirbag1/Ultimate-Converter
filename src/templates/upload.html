@@ -3,11 +3,6 @@
 {% block title %}Upload{% endblock %}
 
 {% block styles %}
-    <style>
-        #file-preview {
-            display: none;
-        }
-    </style>
 {% endblock %}
 
 {% block scripts %} 
@@ -17,26 +12,38 @@
 {% block content %}
     <section>
         <div class="upload-div">
-            <h1>Upload a File</h1>
-            <form class="upload-form" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-                <label for="file-input">
-                    <img src="static/images/upload.png" alt="Upload file">
-                </label>
-                <input type="file" name="file" id="file-input" onchange="handleFileUpload()">
-                <div id="file-preview">
-                    <label for="file-type">Choose file type:</label>
-                    <select id="file-type" name="file-type" onchange="updateFormats()">
-                        <!-- Options will be populated by JavaScript -->
-                    </select>
-                    
-                    <label for="file-format">Choose file format:</label>
-                    <select id="file-format" name="file-format">
-                        <!-- Options will be populated by JavaScript -->
-                    </select>
+            <div class="container">
+                <div class="card">
+                    <h3>Upload Files</h3>
+                    <div id="drop-box" class="drop_box">
+                        <form class="upload-form" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                            <div id="drop-area" class="">
+                                <header>
+                                <h4>Select File here</h4>
+                                </header>
+                                <p>Medias Supported: Image, Audio, Video, Vector, Subtitle, Archive</p>
+                                <input type="file" name="file" id="file-input" onchange="handleFileUpload()" style="display:none;">
+                                <button type="button" class="btn" id="btn-choose-file">Choose File</button>
+                            </div>
+                            
+                            <div id="file-preview">
+                                <h4 id="h4-filename"></h4>
+                                <label for="file-type">Choose file type:</label>
+                                <select id="file-type" name="file-type" onchange="updateFormats()">
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                                
+                                <label for="file-format">Choose file format:</label>
+                                <select id="file-format" name="file-format">
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+
+                                <button type="submit">Upload</button>
+                            </div>
+                        </form>
+                     </div>
                 </div>
-                
-                <button type="submit">Upload</button>
-            </form>
+            </div>
         </div>
     </section>
 {% endblock %}

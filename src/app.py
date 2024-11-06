@@ -1,13 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, get_flashed_messages
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_uploads import UploadSet, UploadNotAllowed, configure_uploads
 from apscheduler.schedulers.background import BackgroundScheduler
-import uuid, os
 from db import db
 from converter import Converter
 from models import Media, DownloadToken
 from logs import log
 from exception import ConvertError
 from datetime import datetime, timedelta
+import uuid, os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
@@ -32,8 +32,9 @@ configure_uploads(app, files)
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=auto_remove_output_file, trigger="interval", minutes=0.1)
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.add_job(func=auto_remove_output_file, trigger="interval", minutes=5)
+        scheduler.start()
 
 def create_media(filename, filetype, filepath):
     log(f'Creating media: {filename}', "INFO")
@@ -43,7 +44,7 @@ def create_media(filename, filetype, filepath):
 
 def create_token(converter: Converter) -> str:
     token = str(uuid.uuid4())
-    expires_at = datetime.now() + timedelta(seconds=10)  # Token expires in 1 hour
+    expires_at = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
     download_token = DownloadToken(token=token, filename=converter.output_file, expires_at=expires_at)
     db.session.add(download_token)
     db.session.commit()
@@ -54,7 +55,7 @@ def remove_uploaded_file(filepath):
         os.remove(filepath)
 
 def auto_remove_output_file():
-    log("Removing expired files...", "INFO")
+    # Run twice when debug mode is on
     with app.app_context():
         expired_tokens = DownloadToken.query.filter(DownloadToken.expires_at < datetime.now()).all()
         for token in expired_tokens:
@@ -91,6 +92,7 @@ def download(token):
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST' and 'file' in request.files:
+        print(request.files, request.form, "HERE")
         file = request.files['file']
         try:
             filename = files.save(file)
@@ -117,8 +119,19 @@ def upload():
             
     return render_template('upload.html')
 
-if __name__ == '__main__':
+@app.route('/web')
+def web():
+    return render_template('web.html')
+
+@app.route('/test')
+def test():
+    return render_template('test.html')
+
+def main():
     with app.app_context():
         db.create_all()
     start_scheduler()
     app.run(debug=True)
+
+if __name__ == '__main__':
+    main()
