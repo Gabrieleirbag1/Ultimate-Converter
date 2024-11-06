@@ -28,7 +28,7 @@ body {
 
 .header-main {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    padding: 2vw;
     height: 13vh;
     display: flex;
     justify-content: space-between;
@@ -38,14 +38,14 @@ body {
 
 .header-main h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 2em;
     color: #333;
 }
 .header-main nav a {
     margin-left: 20px;
     text-decoration: none;
     color: #007BFF;
-    font-size: 16px;
+    font-size: 1.5em;
 }
 .header-main nav a:hover {
     text-decoration: underline;
@@ -64,6 +64,7 @@ body {
 
 .highlight {
     border-color: #005af0 !important;
+    cursor: copy;
 }
 
 .upload-div {
@@ -98,13 +99,12 @@ body {
 .card {
     border-radius: 10px;
     box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.3);
-    width: 45vw;
-    padding: 10px 30px 40px;
+    padding: 2vh 5vw 4vh;
     background-color: #f8f8f5;
 }
 
 .card h3 {
-  font-size: 22px;
+  font-size: 2em;
   font-weight: 600;
 }
 
@@ -120,7 +120,7 @@ body {
 }
 
 .drop_box h4 {
-    font-size: 16px;
+    font-size: 1.5em;
     font-weight: 400;
     color: #2e2e2e;
 }
@@ -128,7 +128,7 @@ body {
 .drop_box p {
     margin-top: 10px;
     margin-bottom: 20px;
-    font-size: 12px;
+    font-size: 1em;
     color: #a3a3a3;
 }
 
@@ -142,6 +142,7 @@ body {
     transition: 0.3s;
     cursor: pointer;
     border-radius: 4px;
+    font-size: 2em;
 }
 
 .btn:hover{
