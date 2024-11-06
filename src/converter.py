@@ -1,6 +1,7 @@
 import os
 import random
 import ffmpeg
+from logs import log
 
 class Converter:
     def __init__(self, input_file_name, type_input_file, type_output_file):
@@ -30,15 +31,15 @@ class Converter:
         self.output_file_name = os.path.basename(self.output_file)
         print(f'Converting file: {self.input_file_name} to {self.output_file}')
         try:
-            ffmpeg.input(self.input_file).output(self.output_file).run()
-            print(f'File converted successfully: {self.output_file}')
+            ffmpeg.input(self.input_file).output(self.output_file).run(capture_stdout=True, capture_stderr=True)
+            log(f'File converted successfully: {self.output_file_name}', "INFO")
             return True
         except ffmpeg.Error as e:
             error_message = e.stderr.decode() if e.stderr else str(e)
-            print(f'Error during conversion: {error_message}')
+            log(f'Error converting file: {error_message}', "ERROR")
             return False
         except Exception as e:
-            print(f'Error: {e}')
+            log(f'An unexpected error occurred: {str(e)}', "ERROR")
             return False
             # raise Exception("An unexpected error occurred. Please try again.")
 

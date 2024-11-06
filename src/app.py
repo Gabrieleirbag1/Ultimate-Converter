@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, get_flashed_messages
 from flask_uploads import UploadSet, UploadNotAllowed, configure_uploads
+from apscheduler.schedulers.background import BackgroundScheduler
+import uuid, os
 from db import db
 from converter import Converter
 from models import Media, DownloadToken
+from logs import log
+from exception import ConvertError
 from datetime import datetime, timedelta
-import uuid, os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
@@ -27,24 +30,40 @@ ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + SUBTITLE + ARCHIVE
 files = UploadSet('files', ALLOWED_EXTENSIONS)
 configure_uploads(app, files)
 
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=auto_remove_output_file, trigger="interval", minutes=0.1)
+    scheduler.start()
+
 def create_media(filename, filetype, filepath):
-    print(f'Creating media: {filename}')
+    log(f'Creating media: {filename}', "INFO")
     media = Media(filename=filename, filetype=filetype, filepath=filepath)
     db.session.add(media)
     db.session.commit()
 
 def create_token(converter: Converter) -> str:
     token = str(uuid.uuid4())
-    expires_at = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
+    expires_at = datetime.now() + timedelta(seconds=10)  # Token expires in 1 hour
     download_token = DownloadToken(token=token, filename=converter.output_file, expires_at=expires_at)
     db.session.add(download_token)
     db.session.commit()
     return token
 
 def remove_uploaded_file(filepath):
-    print("FILEPATH", filepath)
     if os.path.exists(filepath):
         os.remove(filepath)
+
+def auto_remove_output_file():
+    log("Removing expired files...", "INFO")
+    with app.app_context():
+        expired_tokens = DownloadToken.query.filter(DownloadToken.expires_at < datetime.now()).all()
+        for token in expired_tokens:
+            file_path = os.path.join(app.config['OUTPUT_FILES_DEST'], token.filename)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            db.session.delete(token)
+        log(f"Removed {len(expired_tokens)} expired files.", "INFO")        
+        db.session.commit()
 
 @app.route('/')
 def home():
@@ -83,17 +102,23 @@ def upload():
         output_format = request.form['file-format']
 
         converter = Converter(filename, filetype, output_format)
-        if converter.convert():
-            remove_uploaded_file(converter.input_file)
-            create_media(converter.output_file_name, filetype, converter.output_file)
-            token = create_token(converter)
-            return redirect(url_for('download_page', token=token))
-        else:
+        try:
+            if converter.convert():
+                create_media(converter.output_file_name, filetype, converter.output_file)
+                token = create_token(converter)
+                return redirect(url_for('download_page', token=token))
+            else:
+                raise ConvertError
+        except ConvertError:
             flash('An error occurred during the conversion. Please try again.', "error")
             return redirect(url_for('upload'))
+        finally:
+            remove_uploaded_file(converter.input_file)
+            
     return render_template('upload.html')
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+    start_scheduler()
     app.run(debug=True)
