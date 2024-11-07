@@ -55,7 +55,7 @@ function handleFileUpload() {
 
     h4_filename.textContent = file_name;
     drop_area.style.display = 'none';
-    file_preview.style.display = 'block';
+    file_preview.style.display = 'flex';
 
     types.forEach(format => {
         const option = document.createElement('option');
