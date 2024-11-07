@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block scripts %} 
+    <script src="static/scripts/web.js"></script>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="upload-div">
+      <div class="container">
+          <div class="card">
+              <form class="download-form">
+                <h3>Download from web</h3>
+                <div class="download-div">
+                    <div class="download-p-div">
+                      <p class="download-p">Medias Supported: Image, Audio, Video, Vector, Subtitle, Archive</p>
+                      <p class="download-p">Websites Supported: Youtube, Twitter, Instagram, Tiktok, Spotify</p>
+                    </div>
+                    <input type="text" id="url" placeholder="Enter URL">   
+                    <button class="btn" type="submit">Confirm</button>  
+                </div>     
+              </form>     
+          </div>
+      </div>
+  </div>
+</section>
+{% endblock %}

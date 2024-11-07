@@ -89,7 +89,7 @@ def download(token):
         flash('The download link has expired or is invalid.', "error")
         return redirect(url_for('home'))
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/convert', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST' and 'file' in request.files:
         print(request.files, request.form, "HERE")
@@ -98,7 +98,7 @@ def upload():
             filename = files.save(file)
         except UploadNotAllowed:
             flash('File type not allowed.', "error")
-            return redirect(url_for('upload'))
+            return redirect(url_for('convert'))
         
         filetype = file.content_type
         output_format = request.form['file-format']
@@ -113,11 +113,11 @@ def upload():
                 raise ConvertError
         except ConvertError:
             flash('An error occurred during the conversion. Please try again.', "error")
-            return redirect(url_for('upload'))
+            return redirect(url_for('convert'))
         finally:
             remove_uploaded_file(converter.input_file)
             
-    return render_template('upload.html')
+    return render_template('convert.html')
 
 @app.route('/web')
 def web():

@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Download{% endblock %}
-
 {% block content %}
     <button class="btn" onclick="window.location.href='{{ url_for('upload') }}';">Convert a file</button>
+    <button class="btn" onclick="window.location.href='{{ url_for('web') }}';">Download from web</button>
 {% endblock %}

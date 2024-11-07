@@ -1,12 +1,10 @@
 {% extends "layout.html" %}
 
-{% block title %}Upload{% endblock %}
-
 {% block styles %}
 {% endblock %}
 
 {% block scripts %} 
-    <script src="static/scripts/upload.js"></script>
+    <link rel="stylesheet" href="static/styles/main.css">
 {% endblock %}
 
 {% block content %}
@@ -23,7 +21,7 @@
                                         <h4>Select File here</h4>
                                     </header>
                                 </div>
-                                <p>Medias Supported: Image, Audio, Video, Vector, Subtitle, Archive</p>
+                                <p class="drop-box-p">Medias Supported: Image, Audio, Video, Vector, Subtitle, Archive</p>
                                 <input type="file" name="file" id="file-input" onchange="handleFileUpload()" style="display:none;">
                                 <button type="button" class="btn" id="btn-choose-file">Choose File</button>
                             </div>
@@ -36,7 +34,7 @@
                                 </div>
                                 <div class="select-div">
                                     <div class="choose-div">
-                                        <label for="file-type">Choose file type:</label>
+                                        <label for="file-type">Choose media type:</label>
                                         <select id="file-type" name="file-type" onchange="updateFormats()">
                                         <!-- Options will be populated by JavaScript -->
                                         </select>

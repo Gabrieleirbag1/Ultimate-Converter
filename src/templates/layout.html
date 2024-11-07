@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Ultimate Converter{% endblock %}</title>
-    <link rel="stylesheet" href="static/styles/main.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
     {% block styles %}{% endblock styles %}
     {% block scripts %}{% endblock %}
 </head>
@@ -12,7 +12,7 @@
   <header class="header-main">
     <h1>Ultimate Converter</h1>
     <nav>
-        <a href="{{ url_for('upload') }}">Upload</a>
+        <a href="{{ url_for('upload') }}">Convert</a>
         <a href="{{ url_for('web') }}">Web</a>
         <a href="{{ url_for('home') }}">Home</a>
     </nav>
