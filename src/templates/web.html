@@ -2,16 +2,22 @@
 
 {% block scripts %} 
     <script src="static/scripts/web.js"></script>
+    <script src="static/scripts/fixing-size.js"></script>
 {% endblock %}
 
 {% block content %}
 <section>
   <div class="upload-div">
       <div class="container">
-          <div class="card">
+          <div id="fixed-card" class="card">
               <form class="download-form">
                 <h3>Download from web</h3>
-                <div class="download-div">
+                <div class="download-div fixed-sub-div">
+                    <div class="file-preview-header">
+                        <header>
+                            <h4>Select File here</h4>
+                        </header>
+                    </div>
                     <div class="download-p-div">
                       <p class="download-p">Medias Supported: Image, Audio, Video, Vector, Subtitle, Archive</p>
                       <p class="download-p">Websites Supported: Youtube, Twitter, Instagram, Tiktok, Spotify</p>

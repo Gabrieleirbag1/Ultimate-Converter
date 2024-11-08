@@ -90,7 +90,7 @@ def download(token):
         return redirect(url_for('home'))
 
 @app.route('/convert', methods=['GET', 'POST'])
-def upload():
+def convert():
     if request.method == 'POST' and 'file' in request.files:
         print(request.files, request.form, "HERE")
         file = request.files['file']
@@ -114,7 +114,7 @@ def upload():
         except ConvertError:
             flash('An error occurred during the conversion. Please try again.', "error")
             return redirect(url_for('convert'))
-        finally:
+        finally: 
             remove_uploaded_file(converter.input_file)
             
     return render_template('convert.html')
