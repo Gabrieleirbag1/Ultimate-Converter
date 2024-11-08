@@ -1,6 +1,6 @@
 from pytubefix import YouTube, Stream
 from instaloader import Post, Instaloader
-import random, os, re, sys, requests
+import random, os, re, sys, requests, subprocess
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
@@ -198,11 +198,41 @@ class SpotifyDownloader:
     def __init__(self, url, output_path):
         self.url = url
         self.output_path = output_path
+        
+    def check_spotify_type(self):
+        if 'track' in self.url:
+            self.type = 'track'
+        elif 'album' in self.url:
+            self.type = 'album'
+        elif 'playlist' in self.url:
+            self.type = 'playlist'
+        else:
+            raise ValueError("Unsupported Spotify URL type")
 
     def download_spotify_audio(self):
-        pass
+        self.check_spotify_type()
+        command = [
+            'spotdl',
+            'download',
+            self.url,
+            '--output', self.output_path
+        ]
+        try:
+            subprocess.run(command, check=True)
+            print(f"Downloaded successfully to {self.output_path}")
+        except subprocess.CalledProcessError as e:
+            print(f"Error during download: {e}")
 
+# Example usage
 if __name__ == "__main__":
-    # downloader = WebDownloader("https://www.youtube.com/watch?v=icPHcK_cCF4&pp=ygUXeW91dHViZSA1IHNlY29uZHMgdmlkZW8%3D")
-    # downloader = WebDownloader("https://www.instagram.com/zurgloxleterrible/p/C61bFusC8ce/?hl=hu  ")
-    downloader = WebDownloader("https://x.com/JixonKds/status/1854489456423666137")
+    url = "https://open.spotify.com/intl-fr/track/180f6yuE1mPjD2hs5fdxLm?si=47670c310d944aef"  # Replace with your Spotify URL
+    url = "https://open.spotify.com/playlist/37i9dQZF1EpiylCZQ6XZD4?si=f40e99cc1b014363" # Playlist
+    url = "https://open.spotify.com/intl-fr/album/0DsMhU0ERzMt6xvtGpgXvW?si=8UmBjpT6Qbe0STQvgKyRlg" # Album
+    output_path = "C:/Users/Siphano/Documents/VSCODE/Ultimate-Converter/src/output"  # Replace with your desired output path
+    downloader = SpotifyDownloader(url, output_path)
+    downloader.download_spotify_audio()
+
+# if __name__ == "__main__":
+#     # downloader = WebDownloader("https://www.youtube.com/watch?v=icPHcK_cCF4&pp=ygUXeW91dHViZSA1IHNlY29uZHMgdmlkZW8%3D")
+#     # downloader = WebDownloader("https://www.instagram.com/zurgloxleterrible/p/C61bFusC8ce/?hl=hu  ")
+#     downloader = WebDownloader("https://x.com/JixonKds/status/1854489456423666137")
