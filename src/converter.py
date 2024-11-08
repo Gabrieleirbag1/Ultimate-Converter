@@ -26,7 +26,7 @@ class Converter:
 
     def convert(self):
         self.input_file = os.path.join(self.input_dir, f"{self.input_file_name}")
-        base_name = self.input_file_name.split(".")[0]
+        base_name = self.input_file_name.rsplit('.', 1)[0]
         self.output_file = self.get_unique_output_file(base_name, self.type_output_file)
         self.output_file_name = os.path.basename(self.output_file)
         print(f'Converting file: {self.input_file_name} to {self.output_file}')
