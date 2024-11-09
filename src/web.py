@@ -5,33 +5,6 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
 
-class WebDownloader:
-    def __init__(self, url):
-        self.url = url
-        self.output_path = os.path.join(os.path.dirname(__file__), 'output')
-        self.check_url_website()    
-
-    def check_url_website(self):
-        log(self.url, "DEBUG")
-        if 'youtube.com' in self.url:
-            youtube = YoutubeDownloader(self.url, self.output_path)
-            youtube.download_youtube_video()
-        elif 'twitter.com' in self.url or 'x.com' in self.url:
-            twitter = TwitterDownloader(self.url, self.output_path)
-            twitter.download_twitter_video()
-        elif 'instagram.com' in self.url:
-            instagram = InstagramDownloader(self.url, self.output_path)
-            instagram.download_instagram_post()
-        elif 'spotify.com' in self.url:
-            return 'spotify'
-        else:
-            return None
-
-    def download_spotify_audio(url, output_path):
-        # Download the audio using requests or another method
-        # spotdl https://open.spotify.com/track/your_track_id
-        pass
-
 class YoutubeDownloader():
     def __init__(self, url, output_path, quality='highest', media='video', extension='mp4'):
         super().__init__()
@@ -41,7 +14,7 @@ class YoutubeDownloader():
         self.media = media
         self.extension = extension
 
-    def download_youtube_video(self):
+    def download(self):
         yt = YouTube(self.url)
         stream = self.set_stream(yt)
         final_file_name = self.set_name(stream)
@@ -93,7 +66,7 @@ class InstagramDownloader:
         self.format = format
         self.loader = Instaloader()
 
-    def download_instagram_post(self):
+    def download(self):
         post = Post.from_shortcode(self.loader.context, self.url.split('/')[-2])
         if post.is_video:
             self.download_video(post)
@@ -163,7 +136,7 @@ class TwitterDownloader:
         progress_bar.close()
         log(f"Downloaded {file_name} from {url}", "INFO")
 
-    def download_twitter_video(self):
+    def download(self):
         """Extract the highest quality video url to download into a file
 
         Args:
@@ -209,7 +182,7 @@ class SpotifyDownloader:
         else:
             raise ValueError("Unsupported Spotify URL type")
 
-    def download_spotify_audio(self):
+    def download(self):
         self.check_spotify_type()
         command = [
             'spotdl',
@@ -223,16 +196,47 @@ class SpotifyDownloader:
         except subprocess.CalledProcessError as e:
             print(f"Error during download: {e}")
 
-# Example usage
-if __name__ == "__main__":
-    url = "https://open.spotify.com/intl-fr/track/180f6yuE1mPjD2hs5fdxLm?si=47670c310d944aef"  # Replace with your Spotify URL
-    url = "https://open.spotify.com/playlist/37i9dQZF1EpiylCZQ6XZD4?si=f40e99cc1b014363" # Playlist
-    url = "https://open.spotify.com/intl-fr/album/0DsMhU0ERzMt6xvtGpgXvW?si=8UmBjpT6Qbe0STQvgKyRlg" # Album
-    output_path = "C:/Users/Siphano/Documents/VSCODE/Ultimate-Converter/src/output"  # Replace with your desired output path
-    downloader = SpotifyDownloader(url, output_path)
-    downloader.download_spotify_audio()
+class WebDownloader:
+    def __init__(self, url, format):
+        self.url = url
+        self.format = format
+        
+        self.output_path = os.path.join(os.path.dirname(__file__), 'output')
+
+    def setup_download(self):
+        log(self.url, "DEBUG")
+        if 'youtube.com' in self.url or 'youtu.be' in self.url:
+            self.download_media(YoutubeDownloader)
+        elif 'twitter.com' in self.url or 'x.com' in self.url:
+            self.download_media(TwitterDownloader)
+        elif 'instagram.com' in self.url:
+            self.download_media(InstagramDownloader)
+        elif 'spotify.com' in self.url:
+            self.download_media(SpotifyDownloader)
+        else:
+            return None
+    
+    def download_media(self, MediaDownloader: YoutubeDownloader | TwitterDownloader | InstagramDownloader | SpotifyDownloader):
+        media = MediaDownloader(self.url, self.output_path)
+        media.download()
+
+    def get_unique_filename(self):
+        base_name = "downloaded_file"
+        extension = self.format
+        output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
+        while os.path.exists(output_file):
+            random_number = random.randint(1, 10000)
+            output_file = os.path.join(self.output_path, f'{base_name}_{random_number}.{extension}')
+        return output_file
+
+# if __name__ == "__main__":
+#     url = "https://open.spotify.com/playlist/37i9dQZF1EpiylCZQ6XZD4?si=f40e99cc1b014363" # Playlist
+#     url = "https://open.spotify.com/intl-fr/album/0DsMhU0ERzMt6xvtGpgXvW?si=8UmBjpT6Qbe0STQvgKyRlg" # Album
 
 # if __name__ == "__main__":
 #     # downloader = WebDownloader("https://www.youtube.com/watch?v=icPHcK_cCF4&pp=ygUXeW91dHViZSA1IHNlY29uZHMgdmlkZW8%3D")
 #     # downloader = WebDownloader("https://www.instagram.com/zurgloxleterrible/p/C61bFusC8ce/?hl=hu  ")
 #     downloader = WebDownloader("https://x.com/JixonKds/status/1854489456423666137")
+
+if __name__ == "__main__":
+    WebDownloader("https://open.spotify.com/track/40EL2KYZw9V2RLdekNCQM6?si=01e5b27b43a7402e")

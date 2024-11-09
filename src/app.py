@@ -1,13 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_uploads import UploadSet, UploadNotAllowed, configure_uploads
 from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+from uuid import uuid4
 from db import db
 from converter import Converter
 from models import Media, DownloadToken
 from logs import log
 from exception import ConvertError
-from datetime import datetime, timedelta
-import uuid, os
+from web import WebDownloader
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
@@ -42,10 +44,10 @@ def create_media(filename, filetype, filepath):
     db.session.add(media)
     db.session.commit()
 
-def create_token(converter: Converter) -> str:
-    token = str(uuid.uuid4())
+def create_token(output_file) -> str:
+    token = str(uuid4())
     expires_at = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
-    download_token = DownloadToken(token=token, filename=converter.output_file, expires_at=expires_at)
+    download_token = DownloadToken(token=token, filename=output_file, expires_at=expires_at)
     db.session.add(download_token)
     db.session.commit()
     return token
@@ -107,7 +109,7 @@ def convert():
         try:
             if converter.convert():
                 create_media(converter.output_file_name, filetype, converter.output_file)
-                token = create_token(converter)
+                token = create_token(converter.output_file)
                 return redirect(url_for('download_page', token=token))
             else:
                 raise ConvertError
@@ -119,8 +121,23 @@ def convert():
             
     return render_template('convert.html')
 
-@app.route('/web')
+@app.route('/web', methods=['GET', 'POST'])
 def web():
+    log(f'Getting form {request.form}', "DEBUG")
+    if request.method == 'POST' and 'url' in request.form:
+        url = request.form['url']
+        filetype = request.form['file-format']
+
+        web = WebDownloader(url, filetype)
+        
+        filename = web.get_unique_filename()
+        filepath = os.path.join(os.path.dirname(__file__), "output", filename)
+
+        if web.setup_download():
+            create_media(filename, filetype, filepath)
+            token = create_token(filepath)
+            return redirect(url_for('download_page', token=token))    
+        
     return render_template('web.html')
 
 @app.route('/test')

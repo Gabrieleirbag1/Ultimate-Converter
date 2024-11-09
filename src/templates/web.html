@@ -7,27 +7,56 @@
 
 {% block content %}
 <section>
-  <div class="upload-div">
-      <div class="container">
-          <div id="fixed-card" class="card">
-              <form class="download-form">
+    <div class="upload-div">
+        <div class="container">
+            <div id="fixed-card" class="card">
                 <h3>Download from web</h3>
-                <div class="download-div fixed-sub-div">
-                    <div class="file-preview-header">
-                        <header>
-                            <h4>Select File here</h4>
-                        </header>
-                    </div>
-                    <div class="download-p-div">
-                      <p class="download-p">Medias Supported: Image, Audio, Video, Vector, Subtitle, Archive</p>
-                      <p class="download-p">Websites Supported: Youtube, Twitter, Instagram, Tiktok, Spotify</p>
-                    </div>
-                    <input type="text" id="url" placeholder="Enter URL">   
-                    <button class="btn" type="submit">Confirm</button>  
-                </div>     
-              </form>     
-          </div>
-      </div>
-  </div>
+                <div class="web-box">
+                    <form class="download-form" action="{{ url_for('web') }}" method="post" enctype="multipart/form-data">
+                        
+                        <div id="download-div" class="download-div fixed-sub-div">
+                            <div class="file-preview-header">
+                                <header>
+                                    <h4>Select File here</h4>
+                                </header>
+                            </div>
+                            <div class="download-p-div">
+                            <p class="download-p">Websites Supported: Youtube, Twitter, Instagram, Spotify</p>
+                            </div>
+                            <input type="text" name="url" id="url" placeholder="Enter URL">   
+                            <button type="button" class="btn" onclick="handleFileUpload()">Confirm</button>  
+                        </div>   
+
+                        <div id="file-preview" class="file-preview-div fixed-sub-div">
+                            <div class="file-preview-header">
+                                <header>
+                                    <h4 id="h4-filename"></h4>
+                                </header>
+                            </div>
+                            <div class="select-div">
+                                <div class="choose-div">
+                                    <label for="file-type">Choose media type:</label>
+                                    <select id="file-type" name="file-type" onchange="updateFormats()">
+                                    <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                            
+                                <div class="choose-div">
+                                    <label for="file-format">Choose file format:</label>
+                                    <select id="file-format" name="file-format">
+                                    <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn" type="submit">Upload</button>
+                            </div>
+                        </div>  
+
+                    </form>    
+                </div> 
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}
