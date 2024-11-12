@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1>Download Your Converted File</h1>
-    <a class="btn btn-success" href="{{ url_for('download', token=token) }}">Download</a>
+    <div class="download-div card">
+        <h1>Download Your Converted File</h1>
+        <a class="btn btn-success" href="{{ url_for('download', token=token) }}">Download</a>
+    </div>
 {% endblock %}

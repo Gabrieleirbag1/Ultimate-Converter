@@ -24,7 +24,7 @@ function checkUrlWebsite(url) {
 function handleFileUpload() {
     const file_type = document.getElementById('file-type');
     const file_preview = document.getElementById('file-preview');
-    const download_div = document.getElementById('download-div');
+    const download_div = document.getElementById('web-div');
     const h4_filename = document.getElementById('h4-filename');
     const url = document.getElementById("url").value;
     

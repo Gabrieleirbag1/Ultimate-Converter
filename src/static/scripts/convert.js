@@ -113,7 +113,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function highlight(e) {
         dropBox.classList.add('highlight')
-        //change cursor
     }
 
     function unhighlight(e) {

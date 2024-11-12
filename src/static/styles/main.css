@@ -226,7 +226,7 @@ select {
     border-radius: 5px;
 }
 
-.download-div {
+.web-div {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
@@ -237,4 +237,13 @@ select {
 .download-p {
     font-size: 1em;
     color: #a3a3a3;
+}
+
+/* ############################# STYLES FOR DOWNLOAD ############################# */
+
+.download-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
 }
