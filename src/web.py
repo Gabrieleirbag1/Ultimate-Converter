@@ -6,21 +6,23 @@ from tqdm import tqdm
 from logs import log
 
 class YoutubeDownloader():
-    def __init__(self, url, output_path, quality='highest', media='video', extension='mp4'):
+    def __init__(self, url, output_path, quality='highest', media='video', format='mp4'):
         super().__init__()
         self.url = url
         self.output_path = output_path
         self.quality = quality
         self.media = media
-        self.extension = extension
+        self.format = format
+
+        self.final_file_name: str
 
     def download(self):
         yt = YouTube(self.url)
         stream = self.set_stream(yt)
-        final_file_name = self.set_name(stream)
+        self.final_file_name = self.set_name(stream)
         
-        log(f"Downloading {final_file_name} in {self.media} media with {self.quality} quality", "INFO")
-        stream.download(self.output_path, filename=final_file_name)
+        log(f"Downloading {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
+        stream.download(self.output_path, filename=self.final_file_name)
 
     def get_resolutions(self, yt: YouTube):
         resolutions = []
@@ -67,6 +69,8 @@ class InstagramDownloader:
         self.format = format
         self.loader = Instaloader()
 
+        self.final_file_name: str
+
     def download(self):
         post = Post.from_shortcode(self.loader.context, self.url.split('/')[-2])
         if post.is_video:
@@ -93,9 +97,9 @@ class InstagramDownloader:
         if len(base_name) > 50:
             base_name = base_name[:50]
         log(f"Base name: {base_name}", "DEBUG")
-        final_file_name = self.get_unique_output_file(base_name, extension)
-        log(f"Downloading {final_file_name} from {file_url}", "INFO")
-        self.loader.download_pic(final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
+        self.final_file_name = self.get_unique_output_file(base_name, extension)
+        log(f"Downloading {self.final_file_name} from {file_url}", "INFO")
+        self.loader.download_pic(self.final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
 
     def get_unique_output_file(self, base_name, extension):
         output_file = os.path.join(self.output_path, f'{base_name}_converted.{extension}')
@@ -109,6 +113,8 @@ class TwitterDownloader:
         self.url = url
         self.output_path = output_path
         self.format = format
+
+        self.final_file_name: str
 
     def get_unique_output_file(self, base_name, extension):
         output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
@@ -162,6 +168,7 @@ class TwitterDownloader:
             base_name = base_name[:50]
         log(f"Base name: {base_name}", "DEBUG")
         unique_file_name = self.get_unique_output_file(base_name, self.format)
+        self.final_file_name = unique_file_name
         self.download_video(highest_quality_url, unique_file_name)
 
     def check_url_website(self):
@@ -175,10 +182,12 @@ class TwitterDownloader:
                 log("Invalid Twitter video URL provided.", "ERROR")
 
 class SpotifyDownloader:
-    def __init__(self, url, output_path):
+    def __init__(self, url, output_path, format):
         self.url = url
         self.output_path = output_path
-        
+
+        self.format = format
+
     def check_spotify_type(self):
         if 'track' in self.url:
             self.type = 'track'
@@ -208,33 +217,27 @@ class WebDownloader:
         self.url = url
         self.format = format
         
+        self.filename: str
         self.output_path = os.path.join(os.path.dirname(__file__), 'output')
 
     def setup_download(self):
         log(self.url, "DEBUG")
         if 'youtube.com' in self.url or 'youtu.be' in self.url:
-            self.download_media(YoutubeDownloader)
+            web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format)
+            web_dl.download()
         elif 'twitter.com' in self.url or 'x.com' in self.url:
-            self.download_media(TwitterDownloader)
+            web_dl = TwitterDownloader(self.url, self.output_path, format=self.format)
+            web_dl.download()
         elif 'instagram.com' in self.url:
-            self.download_media(InstagramDownloader)
+            web_dl = InstagramDownloader(self.url, self.output_path, format=self.format)
+            web_dl.download()
         elif 'spotify.com' in self.url:
-            self.download_media(SpotifyDownloader)
+            web_dl = SpotifyDownloader(self.url, self.output_path, format=self.format)
+            web_dl.download()
         else:
             return None
-    
-    def download_media(self, MediaDownloader: YoutubeDownloader | TwitterDownloader | InstagramDownloader | SpotifyDownloader):
-        media = MediaDownloader(self.url, self.output_path)
-        media.download()
-
-    def get_unique_filename(self):
-        base_name = "downloaded_file"
-        extension = self.format
-        output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
-        while os.path.exists(output_file):
-            random_number = random.randint(1, 10000)
-            output_file = os.path.join(self.output_path, f'{base_name}_{random_number}.{extension}')
-        return output_file
+        self.filename = web_dl.final_file_name
+        return True
 
 # if __name__ == "__main__":
 #     url = "https://open.spotify.com/playlist/37i9dQZF1EpiylCZQ6XZD4?si=f40e99cc1b014363" # Playlist

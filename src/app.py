@@ -130,14 +130,15 @@ def web():
 
         web = WebDownloader(url, filetype)
         
-        filename = web.get_unique_filename()
-        filepath = os.path.join(os.path.dirname(__file__), "output", filename)
-
         if web.setup_download():
+            filename = web.filename
+            filepath = os.path.join(os.path.dirname(__file__), "output", filename)
             create_media(filename, filetype, filepath)
             token = create_token(filepath)
             return redirect(url_for('download_page', token=token))    
-        
+        else:
+            flash('An error occurred during the download. Please try again.', "error")
+            return redirect(url_for('web'))
     return render_template('web.html')
 
 @app.route('/test')
