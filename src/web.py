@@ -50,7 +50,8 @@ class YoutubeDownloader():
         base_name, ext = os.path.splitext(file_name)
         
         base_name = base_name.replace("|", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("\\", "_").replace("/", "_")
-        
+        if len(base_name) > 50:
+            base_name = base_name[:50]
         final_file_name = f"{base_name}{ext}"
         while os.path.exists(os.path.join(self.output_path, final_file_name)):
             log(os.path.join(self.output_path, final_file_name), "DEBUG")
@@ -88,7 +89,9 @@ class InstagramDownloader:
         self.download_file(image_url, post, self.format)
 
     def download_file(self, file_url, post, extension):
-        base_name = post.shortcode
+        base_name = post.shortcode.replace("|", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("\\", "_").replace("/", "_")
+        if len(base_name) > 50:
+            base_name = base_name[:50]
         log(f"Base name: {base_name}", "DEBUG")
         final_file_name = self.get_unique_output_file(base_name, extension)
         log(f"Downloading {final_file_name} from {file_url}", "INFO")
@@ -154,7 +157,11 @@ class TwitterDownloader:
         file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
         file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + f".{self.format}"  # Remove special characters from file name
 
-        unique_file_name = self.get_unique_output_file(file_name.rsplit('.', 1)[0], self.format)
+        base_name = file_name.rsplit('.', 1)[0].replace("|", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("\\", "_").replace("/", "_")
+        if len(base_name) > 50:
+            base_name = base_name[:50]
+        log(f"Base name: {base_name}", "DEBUG")
+        unique_file_name = self.get_unique_output_file(base_name, self.format)
         self.download_video(highest_quality_url, unique_file_name)
 
     def check_url_website(self):
