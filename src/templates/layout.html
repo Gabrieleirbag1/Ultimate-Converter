@@ -21,18 +21,20 @@
     </nav>
 </header>
     <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div id="modal" class="modal">
-                    <img src="{{ url_for('static', filename='images/alert.png') }}" width="44" height="38" />
-                        <span class="title">Oh snap!</span>
-                            {% for category, message in messages %}
-                                <p class="{{ category }}">{{ message }}</p>
-                            {% endfor %}
-                        <div id="dismiss-button" class="button">Dismiss</div>
-                </div>
-            {% endif %}
-        {% endwith %}
+        <div id="flash-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div id="modal" class="modal">
+                        <img src="{{ url_for('static', filename='images/alert.png') }}" width="44" height="38" />
+                            <span class="title">Oh snap!</span>
+                                {% for category, message in messages %}
+                                    <p class="{{ category }}">{{ message }}</p>
+                                {% endfor %}
+                            <div id="dismiss-button" class="button">Dismiss</div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
 
         {% block content %}
         {% endblock %}        

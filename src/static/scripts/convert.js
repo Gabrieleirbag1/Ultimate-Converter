@@ -47,7 +47,7 @@ function handleFileUpload() {
         types = ["Archive"]
     }
     else{
-        window.alert("File type not supported");
+        displayFlashMessage("Invalid file format. Please upload a valid file format.");
         // delete the file from the input
         document.getElementById('file-input').value = null
         return;
@@ -78,6 +78,20 @@ function updateFormats() {
         file_format.appendChild(option);
     });
 }
+
+function displayFlashMessage(message) {
+    const flashContainer = document.getElementById("flash-container");
+    flashContainer.innerHTML = 
+    `<div id="modal" class="modal">
+              <img src="/static/images/alert.png" width="44" height="38" />
+              <span class="title">Oh snap!</span>
+              <p>${message}</p>
+              <div id="dismiss-button" class="button">Dismiss</div>
+      </div>`;
+
+    initializeModal();
+    document.getElementById("script_file").value = "";
+  }
 
 document.addEventListener("DOMContentLoaded", function() {
     const dropBox = document.getElementById("drop-box"),
@@ -127,3 +141,4 @@ document.addEventListener("DOMContentLoaded", function() {
         handleFileUpload();
     }
 });
+
