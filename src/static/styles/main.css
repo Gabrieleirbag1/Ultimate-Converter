@@ -68,6 +68,13 @@ section {
     text-decoration: underline;
 }
 
+.footer-main{
+    background-color: #464a5d;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+}
+
 /* ############################# STYLES FOR THE INDEX PAGE ############################# */
 
 .index-section {
