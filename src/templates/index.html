@@ -1,10 +1,16 @@
 {% extends "layout.html" %}
 
+{% block styles %}
+{% endblock %}
+
 {% block content %}
     <section class="index-section">
-        <div class="welcome-div">
-            <h1>Welcome to Ultimate Converter</h1>
-            <div class="card">
+        <div class="card welcome-div">
+            <div class="welcome-title-div">
+                <h1>Welcome to Ultimate Converter !</h1>
+                <p> The ultimate tool to convert files from one format to another and download media from popular platforms.</p>
+            </div>
+            <div class="index-buttons-div">
                 <button class="btn" onclick="window.location.href='{{ url_for('convert') }}';">Convert a file</button>
                 <button class="btn" onclick="window.location.href='{{ url_for('web') }}';">Download from web</button>
             </div>

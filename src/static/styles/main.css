@@ -1,9 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
 * {
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
 }
 
 /* ############################# STYLES FOR THE LAYOUT PAGE ############################# */
@@ -14,16 +14,29 @@ body {
     --c1: #b2b2b2;
     --c2: #ffffff;
     --c3: #d9d9d9;
-    
-    --_g: var(--c3) 0 120deg,#0000 0;
-    background:
-        conic-gradient(from -60deg at 50% calc(100%/3),var(--_g)),
-        conic-gradient(from 120deg at 50% calc(200%/3),var(--_g)),
-        conic-gradient(from  60deg at calc(200%/3),var(--c3) 60deg,var(--c2) 0 120deg,#0000 0),
-        conic-gradient(from 180deg at calc(100%/3),var(--c1) 60deg,var(--_g)),
-        linear-gradient(90deg,var(--c1)   calc(100%/6),var(--c2) 0 50%,
-                            var(--c1) 0 calc(500%/6),var(--c2) 0);
-    background-size: calc(1.732*var(--s)) var(--s);
+
+    --_g: var(--c3) 0 120deg, #0000 0;
+    background: conic-gradient(from -60deg at 50% calc(100% / 3), var(--_g)),
+        conic-gradient(from 120deg at 50% calc(200% / 3), var(--_g)),
+        conic-gradient(
+            from 60deg at calc(200% / 3),
+            var(--c3) 60deg,
+            var(--c2) 0 120deg,
+            #0000 0
+        ),
+        conic-gradient(
+            from 180deg at calc(100% / 3),
+            var(--c1) 60deg,
+            var(--_g)
+        ),
+        linear-gradient(
+            90deg,
+            var(--c1) calc(100% / 6),
+            var(--c2) 0 50%,
+            var(--c1) 0 calc(500% / 6),
+            var(--c2) 0
+        );
+    background-size: calc(1.732 * var(--s)) var(--s);
 }
 
 section {
@@ -48,7 +61,7 @@ section {
 .header-main nav a {
     margin-left: 20px;
     text-decoration: none;
-    color: #007BFF;
+    color: #007bff;
     font-size: 1.5em;
 }
 .header-main nav a:hover {
@@ -57,7 +70,7 @@ section {
 
 /* ############################# STYLES FOR THE INDEX PAGE ############################# */
 
-.index-section{
+.index-section {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
@@ -65,28 +78,49 @@ section {
     height: 87vh;
 }
 
-.welcome-div{
+.welcome-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-title-div {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 40vh;
 }
 
-h1{
+.welcome-title-div h1 {
     font-size: 4em;
     font-weight: 600;
     color: #333;
     margin: 0;
 }
 
-.info-div{
+.welcome-title-div p {
+    font-size: 1.25em;
+    color: #333;
+}
+
+.index-buttons-div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+}
+
+.info-div {
     display: flex;
     flex-direction: row;
     justify-content: center;
 }
 
-.index-card{
+.index-card {
     margin: 3vw;
     width: 100%;
 }
@@ -145,7 +179,7 @@ h1{
     width: 100%;
 }
 
-.drop-file-div{
+.drop-file-div {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -168,8 +202,8 @@ h1{
 }
 
 .card h3 {
-  font-size: 1.75em;
-  font-weight: 600;
+    font-size: 1.75em;
+    font-weight: 600;
 }
 
 .drop_box {
@@ -209,7 +243,7 @@ h4 {
     font-size: 1.25em;
 }
 
-.btn:hover{
+.btn:hover {
     text-decoration: none;
     background-color: #ffffff;
     color: #005af0;
