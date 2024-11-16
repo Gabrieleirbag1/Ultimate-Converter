@@ -1,0 +1,14 @@
+/* ############################# STYLES FOR THE INDEX PAGE ############################# */
+
+@media only screen and (max-width: 768px) {
+    .index-card{
+        margin: 2vw;
+    }
+    
+}
+
+@media only screen and (orientation: portrait) {
+    .index-card {
+        margin: 2vw;
+    }
+}

@@ -55,6 +55,57 @@ section {
     text-decoration: underline;
 }
 
+/* ############################# STYLES FOR THE INDEX PAGE ############################# */
+
+.index-section{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 87vh;
+}
+
+.welcome-div{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 40vh;
+}
+
+h1{
+    font-size: 4em;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.info-div{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.index-card{
+    margin: 3vw;
+    width: 100%;
+}
+
+.card-icon {
+    width: 68px;
+    height: 68px;
+    vertical-align: middle;
+}
+
+.card-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.card-title h2 {
+    color: #333;
+}
 
 /* ############################# STYLES FOR THE CONVERT PAGE ############################# */
 
