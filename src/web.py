@@ -4,6 +4,7 @@ import random, os, re, sys, requests, subprocess
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
+import string
 
 class YoutubeDownloader():
     def __init__(self, url, output_path, quality='highest', media='video', format='mp4'):
@@ -50,8 +51,9 @@ class YoutubeDownloader():
         file_extension = stream.mime_type.split('/')[1]
         file_name = stream.default_filename.replace("|", "_")
         base_name, ext = os.path.splitext(file_name)
-        
-        base_name = base_name.replace("|", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("\\", "_").replace("/", "_")
+        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
+        if str.isspace(base_name) or not base_name:
+            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
         if len(base_name) > 50:
             base_name = base_name[:50]
         final_file_name = f"{base_name}{ext}"
@@ -92,12 +94,18 @@ class InstagramDownloader:
         image_url = post.url
         self.download_file(image_url, post, self.format)
 
-    def download_file(self, file_url, post, extension):
-        base_name = post.shortcode.replace("|", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("\\", "_").replace("/", "_")
+    def genereate_file_name(self, file_name, extension):
+        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
+        log(f"Base name: {base_name}", "DEBUG")
+        if str.isspace(base_name) or not base_name:
+            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
         if len(base_name) > 50:
             base_name = base_name[:50]
-        log(f"Base name: {base_name}", "DEBUG")
         self.final_file_name = self.get_unique_output_file(base_name, extension)
+
+    def download_file(self, file_url, post, extension):
+        file_name = post.shortcode
+        self.generate_file_name(file_name, extension)
         log(f"Downloading {self.final_file_name} from {file_url}", "INFO")
         self.loader.download_pic(self.final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
 
@@ -145,6 +153,17 @@ class TwitterDownloader:
         progress_bar.close()
         log(f"Downloaded {file_name} from {url}", "INFO")
 
+    def generate_file_name(self, data):
+        file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
+        file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + f".{self.format}"  # Remove special characters from file name
+        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
+        if str.isspace(base_name) or not base_name:
+            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        if len(base_name) > 50:
+            base_name = base_name[:50]
+        log(f"Base name: {base_name}", "DEBUG")
+        self.final_file_name = self.get_unique_output_file(base_name, self.format)
+
     def download(self):
         """Extract the highest quality video url to download into a file
 
@@ -160,16 +179,8 @@ class TwitterDownloader:
         quality_buttons = download_button.find_all("a")
         highest_quality_url = quality_buttons[0].get("href")  # Highest quality video url
 
-        file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
-        file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + f".{self.format}"  # Remove special characters from file name
-
-        base_name = file_name.rsplit('.', 1)[0].replace("|", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("\\", "_").replace("/", "_")
-        if len(base_name) > 50:
-            base_name = base_name[:50]
-        log(f"Base name: {base_name}", "DEBUG")
-        unique_file_name = self.get_unique_output_file(base_name, self.format)
-        self.final_file_name = unique_file_name
-        self.download_video(highest_quality_url, unique_file_name)
+        self.generate_file_name(data)
+        self.download_video(highest_quality_url, self.final_file_name)
 
     def check_url_website(self):
         if len(sys.argv) < 2:
