@@ -1,4 +1,4 @@
-from pytubefix import YouTube, Stream
+from pytubefix import YouTube, Stream, Playlist
 from instaloader import Post, Instaloader
 import random, os, re, sys, requests, subprocess
 from bs4 import BeautifulSoup
@@ -18,12 +18,28 @@ class YoutubeDownloader():
         self.final_file_name: str
 
     def download(self):
+        if 'playlist' in self.url:
+            self.download_playlist()
+        else:
+            self.download_video()
+
+    def download_video(self):
         yt = YouTube(self.url)
         stream = self.set_stream(yt)
         self.final_file_name = self.set_name(stream)
         
         log(f"Downloading {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
         stream.download(self.output_path, filename=self.final_file_name)
+
+    def download_playlist(self):
+        playlist = Playlist(self.url)
+        try:
+            log(f"Downloading playlist: {playlist.title}", "INFO")
+            for video in playlist.videos:
+                self.url = video.watch_url
+                self.download_video()
+        except KeyError as e:
+            log(f"Error downloading playlist: {e}", "ERROR")
 
     def get_resolutions(self, yt: YouTube):
         resolutions = []
@@ -41,7 +57,7 @@ class YoutubeDownloader():
             if self.quality == 'highest':
                 stream = yt.streams.get_highest_resolution()
             else:
-                stream = yt.streams.filter(res=self.quality, file_extension=self.extension).first()
+                stream = yt.streams.filter(res=self.quality, file_extension=self.format).first()
         elif self.media == 'audio':
             stream = yt.streams.filter(only_audio=True).first()
 
