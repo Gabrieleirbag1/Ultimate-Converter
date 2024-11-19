@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
+function adjustHeight() {
     const card = document.getElementById("fixed-card");
     const subDiv = document.getElementsByClassName("fixed-sub-div");
     const cardInitialWidth = window.innerWidth * 0.5; // 50% de la largeur initiale de la fenêtre
@@ -7,5 +7,9 @@ document.addEventListener("DOMContentLoaded", function() {
     for (let i = 0; i < subDiv.length; i++) {
         subDiv[i].style.height = `${subDivInitialHeight}px`;
     }
+}
 
+document.addEventListener("DOMContentLoaded", function() {
+    adjustHeight();
+    window.addEventListener("resize", adjustHeight);
 });
