@@ -1,7 +1,39 @@
-import os
-import random
-import ffmpeg
 from logs import log
+import subprocess, os, random, ffmpeg
+
+class ImageToVectorConverter:
+    def __init__(self, input_file):
+        self.input_file = input_file
+
+    def convert_to_vector(self, output_file, format_option):
+        # Convert image to PBM format (required by Potrace)
+        converter = Converter(self.input_file, 'image', 'pbm')
+        if not converter.convert():
+            log(f'Error converting file: {self.input_file}', "ERROR")
+            return
+        pbm_file = converter.output_file
+
+        # Define format options mapping
+        format_options = {
+            'pdf': ['-b', 'pdf'],
+            'dxf': ['-b', 'dxf'],
+            'geojson': ['-b', 'geojson'],
+            'pdfpage': ['-b', 'pdfpage'],
+            'ps': ['-b', 'ps'],
+            'pgm': ['-b', 'pgm'],
+            'gimppath': ['-b', 'gimppath'],
+            'xfig': ['-b', 'xfig'],
+            'eps': ['-e'],
+            'svg': ['-s']
+        }
+
+        # Get the Potrace arguments for the given format option
+        args = format_options.get(format_option, [])
+        subprocess.run(['potrace', pbm_file] + args + ['-o', output_file])
+
+        # Clean up the intermediate PBM file
+        os.remove(pbm_file)
+        print(f'Converted {self.input_file} to {output_file}')
 
 class Converter:
     def __init__(self, input_file_name, type_input_file, type_output_file):
@@ -44,6 +76,5 @@ class Converter:
             # raise Exception("An unexpected error occurred. Please try again.")
 
 if __name__ == '__main__':
-    # Example usage
-    converter = Converter('example.mp4', 'video', 'png')
-    converter.convert()
+    image = ImageToVectorConverter('/home/frigiel/Documents/VSCODE/Ultimate-Converter/src/static/images/alert.png')
+    image.convert_to_vector('/home/frigiel/Documents/VSCODE/Ultimate-Converter/output_vector.svg', 'svg')
