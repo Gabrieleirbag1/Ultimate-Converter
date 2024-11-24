@@ -1,46 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Ultimate Converter{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/media.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/modal.css') }}">
-    {% block styles %}{% endblock styles %}
-    <script src="{{ url_for('static', filename='scripts/modal.js') }}"></script>
-    {% block scripts %}{% endblock %}
-</head>
-<body>
-  <header class="header-main">
-    <h1>Ultimate Converter</h1>
-    <nav>
-        <a href="{{ url_for('convert') }}">Convert</a>
-        <a href="{{ url_for('web') }}">Web</a>
-        <a href="{{ url_for('home') }}">Home</a>
-    </nav>
-</header>
-    <div class="container">
-        <div id="flash-container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block title %}Ultimate Converter{% endblock %}</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='styles/main.css') }}"
+        />
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='styles/media.css') }}"
+        />
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='styles/modal.css') }}"
+        />
+        {% block styles %}{% endblock styles %}
+        <script src="{{ url_for('static', filename='scripts/modal.js') }}"></script>
+        {% block scripts %}{% endblock %}
+    </head>
+    <body>
+        <header class="header-main">
+            <h1>Ultimate Converter</h1>
+            <nav>
+                <a href="{{ url_for('convert') }}">Convert</a>
+                <a href="{{ url_for('web') }}">Web</a>
+                <a href="{{ url_for('home') }}">Home</a>
+            </nav>
+        </header>
+        <main id="main">
+            <div class="container">
+                <div id="flash-container">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
                     <div id="modal" class="modal">
-                        <img src="{{ url_for('static', filename='images/alert.png') }}" width="44" height="38" />
-                            <span class="title">Oh snap!</span>
-                                {% for category, message in messages %}
-                                    <p class="{{ category }}">{{ message }}</p>
-                                {% endfor %}
-                            <div id="dismiss-button" class="button">Dismiss</div>
+                        <img
+                            src="{{ url_for('static', filename='images/alert.png') }}"
+                            width="44"
+                            height="38"
+                        />
+                        <span class="title">Oh snap!</span>
+                        {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                        {% endfor %}
+                        <div id="dismiss-button" class="button">Dismiss</div>
                     </div>
-                {% endif %}
-            {% endwith %}
-        </div>
+                    {% endif %} {% endwith %}
+                </div>
 
-        {% block content %}
-        {% endblock %}        
-    </div>
-<footer class="footer-main">
-    <p>&copy; 2024 Ultimate Converter</p>
-</footer>
-</body>
+                {% block content %} {% endblock %}
+            </div>
+            <footer class="footer-main">
+                <p>&copy; 2024 Ultimate Converter</p>
+            </footer>
+        </main>
+    </body>
 </html>
