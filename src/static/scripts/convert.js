@@ -2,7 +2,7 @@ const formats = {
     audio: ['mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'alac', 'aiff', 'amr', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm', 'vorbis'],
     video: ['mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf'],
     image: ['jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'pnm', 'tga'],
-    vector: ['svg', 'eps', 'pdf', 'ai', 'emf', 'wmf'],
+    vector: ['svg', 'pdf', 'eps', 'ps', 'dxf', 'geojson', 'pdfpage', 'pgm', 'gimppath', 'xfig'],
     subtitle: ['srt', 'ass', 'ssa', 'sub', 'vtt', 'stl', 'dfxp', 'sami', 'mpl2', 'pjs', 'jacosub'],
     archive: ['tar', 'zip', 'gz', 'bz2', 'rar', '7z']
 };
