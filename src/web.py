@@ -4,7 +4,7 @@ import random, os, re, sys, requests, subprocess
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
-import string, zipfile
+import string, zipfile, uuid
 
 class FileManager:
     def __init__(self, media_files: list[str], output_path: str, media_title: str):
@@ -33,7 +33,10 @@ class FileManager:
             for file in self.media_files:
                 log(f"Adding {file} to archive", "DEBUG")
                 file_path = os.path.join(self.output_path, file)
-                zipf.write(file_path, arcname=os.path.basename(file_path))
+                try:
+                    zipf.write(file_path, arcname=os.path.basename(file_path))
+                except FileNotFoundError:
+                    continue
                 self.remove_uploaded_file(file_path)
 
 class YoutubeDownloader():
@@ -250,9 +253,12 @@ class SpotifyDownloader:
     def __init__(self, url, output_path, format):
         self.url = url
         self.output_path = output_path
-
         self.format = format
+
+        self.final_file_name: str = ""
         self.medias_list: list[str] = []
+        self.media_title: str = ""
+        self.unique_dir: str = ""
 
     def check_spotify_type(self):
         if 'track' in self.url:
@@ -264,19 +270,65 @@ class SpotifyDownloader:
         else:
             raise ValueError("Unsupported Spotify URL type")
 
+    def create_unique_directory(self):
+        unique_id = str(uuid.uuid4())
+        self.unique_dir = os.path.join(self.output_path, unique_id)
+        os.makedirs(self.unique_dir, exist_ok=True)
+
+    def remove_unique_directory(self):
+        try:
+            os.rmdir(self.unique_dir)
+        except OSError:
+            pass
+
     def download(self):
         self.check_spotify_type()
+        self.create_unique_directory()
         command = [
             'spotdl',
             'download',
             self.url,
-            '--output', self.output_path
+            '--output', self.unique_dir,
         ]
         try:
-            subprocess.run(command, check=True)
-            print(f"Downloaded successfully to {self.output_path}")
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
+            log(f"Downloaded successfully to {self.unique_dir}", "INFO")
+            output = result.stdout
+            log(output, "DEBUG")
+            if self.type == 'track':
+                self.set_final_file_name_for_track()
+            else:
+                self.set_medias_list_for_album_or_playlist(output)
+                self.create_zip_for_album_or_playlist()
+                self.remove_unique_directory()
         except subprocess.CalledProcessError as e:
-            print(f"Error during download: {e}")
+            log(f"Error during download: {e}", "ERROR")
+
+    def set_final_file_name_for_track(self):
+        files = os.listdir(self.unique_dir)
+        if files:
+            self.final_file_name = os.path.join(self.unique_dir, files[0])
+        else:
+            log("No files found in the download directory.", "ERROR")
+
+    def set_medias_list_for_album_or_playlist(self, output):
+        self.medias_list = [os.path.join(self.unique_dir, f) for f in os.listdir(self.unique_dir)]
+
+        title_match = re.search(r'Found \d+ songs in (.*?) \(', output)
+        if title_match:
+            self.media_title = title_match.group(1)
+        else:
+            log("Could not determine the album/playlist title from the output.", "ERROR")
+            if self.medias_list:
+                self.media_title = os.path.basename(self.unique_dir)
+            else:
+                log("No files found in the download directory.", "ERROR")
+
+    def create_zip_for_album_or_playlist(self):
+        media_title = re.sub(r'[|:*?"<>\\/]', '_', self.media_title)
+        file_manager = FileManager(self.medias_list, self.output_path, media_title)
+        file_manager.make_archive()
+        self.final_file_name = file_manager.zip_final_filename
 
 class WebDownloader:
     def __init__(self, url, format):
