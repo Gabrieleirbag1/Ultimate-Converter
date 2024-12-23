@@ -4,7 +4,37 @@ import random, os, re, sys, requests, subprocess
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
-import string
+import string, zipfile
+
+class FileManager:
+    def __init__(self, media_files: list[str], output_path: str, media_title: str):
+        self.media_files = media_files
+        self.output_path = output_path
+        self.media_title = media_title
+
+        self.zip_final_filename: str
+
+    def get_unique_output_file(self):
+        zip_final_filename = os.path.join(self.output_path, f"{self.media_title}.zip")
+        while os.path.exists(zip_final_filename):
+            random_number = random.randint(1, 10000)
+            zip_final_filename = os.path.join(self.output_path, f"{self.media_title}_{random_number}.zip")
+        self.zip_final_filename = zip_final_filename
+
+    def remove_uploaded_file(self, file_path: str):
+        try:
+            os.remove(file_path)
+        except FileNotFoundError:
+            pass
+
+    def make_archive(self):
+        self.get_unique_output_file()
+        with zipfile.ZipFile(self.zip_final_filename, 'w') as zipf:
+            for file in self.media_files:
+                log(f"Adding {file} to archive", "DEBUG")
+                file_path = os.path.join(self.output_path, file)
+                zipf.write(file_path, arcname=os.path.basename(file_path))
+                self.remove_uploaded_file(file_path)
 
 class YoutubeDownloader():
     def __init__(self, url, output_path, quality='highest', media='video', format='mp4'):
@@ -16,6 +46,7 @@ class YoutubeDownloader():
         self.format = format
 
         self.final_file_name: str
+        self.medias_list: list[str] = []
 
     def download(self):
         if 'playlist' in self.url:
@@ -38,6 +69,11 @@ class YoutubeDownloader():
             for video in playlist.videos:
                 self.url = video.watch_url
                 self.download_video()
+                self.medias_list.append(self.final_file_name)
+            playlist_title = re.sub(r'[|:*?"<>\\/]', '_', playlist.title)
+            file_manager = FileManager(self.medias_list, self.output_path, playlist_title)
+            file_manager.make_archive()
+            self.final_file_name = file_manager.zip_final_filename
         except KeyError as e:
             log(f"Error downloading playlist: {e}", "ERROR")
 
@@ -88,6 +124,7 @@ class InstagramDownloader:
         self.loader = Instaloader()
 
         self.final_file_name: str
+        self.medias_list: list[str] = []
 
     def download(self):
         post = Post.from_shortcode(self.loader.context, self.url.split('/')[-2])
@@ -139,6 +176,7 @@ class TwitterDownloader:
         self.format = format
 
         self.final_file_name: str
+        self.medias_list: list[str] = []
 
     def get_unique_output_file(self, base_name, extension):
         output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
@@ -214,6 +252,7 @@ class SpotifyDownloader:
         self.output_path = output_path
 
         self.format = format
+        self.medias_list: list[str] = []
 
     def check_spotify_type(self):
         if 'track' in self.url:
@@ -245,6 +284,7 @@ class WebDownloader:
         self.format = format
         
         self.filename: str
+        self.medias_list: list[str] = []
         self.output_path = os.path.join(os.path.dirname(__file__), 'output')
 
     def setup_download(self):
@@ -264,6 +304,7 @@ class WebDownloader:
         else:
             return None
         self.filename = web_dl.final_file_name
+        self.medias_list = web_dl.medias_list
         return True
 
 # if __name__ == "__main__":
