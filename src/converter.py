@@ -113,5 +113,5 @@ class ManageConversion:
             self.converter = ClassicConverter(self.input_file_name, self.type_output_file)
 
 if __name__ == '__main__':
-    image = ImageToVectorConverter('/home/frigiel/Documents/VSCODE/Ultimate-Converter/src/static/images/alert.png', 'image', 'svg')
-    image.convert_to_vector()
+    convert_zip = ManageConversion('/home/frigiel/Téléchargements/test.zip', 'tar', 'application/zip')
+    convert_zip.converter.convert()

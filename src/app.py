@@ -38,10 +38,9 @@ VECTOR = {
     'drd2': 0,
     'cgm': 0
 }
-SUBTITLE = ('srt', 'ass', 'ssa', 'sub', 'vtt', 'stl', 'dfxp', 'sami', 'mpl2', 'pjs', 'jacosub')
 ARCHIVE = ('tar', 'zip', 'gz', 'bz2', 'rar', '7z')
 
-ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + SUBTITLE + ARCHIVE
+ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + ARCHIVE
 
 files = UploadSet('files', ALLOWED_EXTENSIONS)
 configure_uploads(app, files)

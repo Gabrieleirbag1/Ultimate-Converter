@@ -3,7 +3,6 @@ const formats = {
     video: ['mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf'],
     image: ['jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'pnm', 'tga'],
     vector: ['svg', 'pdf', 'fig', 'ai', 'sk', 'p2e', 'mif', 'er', 'eps', 'emf', 'dxf', 'drd2', 'cgm'],
-    subtitle: ['srt', 'ass', 'ssa', 'sub', 'vtt', 'stl', 'dfxp', 'sami', 'mpl2', 'pjs', 'jacosub'],
     archive: ['tar', 'zip', 'gz', 'bz2', 'rar', '7z']
 };
 
@@ -39,9 +38,6 @@ function handleFileUpload() {
     }
     else if (file_category == "vector"){
         types = ["Vector", "Image"]
-    }
-    else if (file_category == "subtitle"){
-        types = ["Subtitle"]
     }
     else if (file_category == "archive"){
         types = ["Archive"]

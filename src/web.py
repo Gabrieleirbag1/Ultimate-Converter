@@ -150,7 +150,7 @@ class InstagramDownloader:
         image_url = post.url
         self.download_file(image_url, post, self.format)
 
-    def genereate_file_name(self, file_name, extension):
+    def generate_file_name(self, file_name, extension):
         base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
         log(f"Base name: {base_name}", "DEBUG")
         if str.isspace(base_name) or not base_name:
