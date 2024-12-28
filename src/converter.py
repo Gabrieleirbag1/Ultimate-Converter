@@ -1,21 +1,7 @@
 from logs import log
 import subprocess, os, random, ffmpeg, patoolib
 
-VECTOR = {
-    'svg': 0,
-    'pdf': 0,
-    'fig': 2,
-    'ai': 0,
-    'sk': 0,
-    'p2e': 0,
-    'mif': 256,
-    'er': 0,
-    'eps': 0,
-    'emf': 0,
-    'dxf': 0,
-    'drd2': 0,
-    'cgm': 0
-}
+VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
 ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
 
 class BaseConverter:
