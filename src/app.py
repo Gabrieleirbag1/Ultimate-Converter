@@ -4,7 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from uuid import uuid4
 from db import db
-from converter import Converter
+from converter import ManageConversion
 from models import Media, DownloadToken
 from logs import log
 from exception import ConvertError
@@ -63,7 +63,10 @@ def auto_remove_output_file():
         for token in expired_tokens:
             file_path = os.path.join(app.config['OUTPUT_FILES_DEST'], token.filename)
             if os.path.exists(file_path):
-                os.remove(file_path)
+                try:
+                    os.remove(file_path)
+                except IsADirectoryError:
+                    log(f"Error removing file: {file_path}", "ERROR")
             db.session.delete(token)
         log(f"Removed {len(expired_tokens)} expired files.", "INFO")        
         db.session.commit()
@@ -104,12 +107,14 @@ def convert():
         
         filetype = file.content_type
         output_format = request.form['file-format']
+        log(filetype, "DEBUG")
+        log(output_format, "DEBUG")
 
-        converter = Converter(filename, filetype, output_format)
+        conversion = ManageConversion(filename, output_format, filetype)
         try:
-            if converter.convert():
-                create_media(converter.output_file_name, filetype, converter.output_file)
-                token = create_token(converter.output_file)
+            if conversion.converter.convert():
+                create_media(conversion.converter.output_file_name, filetype, conversion.converter.output_file)
+                token = create_token(conversion.converter.output_file)
                 return redirect(url_for('download_page', token=token))
             else:
                 raise ConvertError
@@ -117,8 +122,7 @@ def convert():
             flash('An error occurred during the conversion. Please try again.', "error")
             return redirect(url_for('convert'))
         finally: 
-            remove_uploaded_file(converter.input_file)
-            
+            remove_uploaded_file(conversion.converter.input_file)
     return render_template('convert.html')
 
 @app.route('/web', methods=['GET', 'POST'])
