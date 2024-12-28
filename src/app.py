@@ -4,12 +4,14 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from uuid import uuid4
 from db import db
+import os
+
 from converter import ManageConversion
 from models import Media, DownloadToken
 from logs import log
 from exception import ConvertError
 from web import WebDownloader
-import os
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
