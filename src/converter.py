@@ -1,7 +1,21 @@
 from logs import log
 import subprocess, os, random, ffmpeg
 
-VECTOR = ('svg', 'eps', 'pdf', 'ai', 'emf', 'wmf')
+VECTOR = {
+    'svg': 0,
+    'pdf': 0,
+    'fig': 2,
+    'ai': 0,
+    'sk': 0,
+    'p2e': 0,
+    'mif': 256,
+    'er': 0,
+    'eps': 0,
+    'emf': 0,
+    'dxf': 0,
+    'drd2': 0,
+    'cgm': 0
+}
 
 class BaseConverter:
     def __init__(self, input_file_name: str, type_output_file: str):
@@ -30,31 +44,32 @@ class BaseConverter:
 class ImageToVectorConverter(BaseConverter):
     def __init__(self, input_file_name: str, type_output_file: str):
         super().__init__(input_file_name, type_output_file)
-        self.format_options = {
-            'pdf': ['-b', 'pdf'],
-            'dxf': ['-b', 'dxf'],
-            'geojson': ['-b', 'geojson'],
-            'pdfpage': ['-b', 'pdfpage'],
-            'ps': ['-b', 'ps'],
-            'pgm': ['-b', 'pgm'],
-            'gimppath': ['-b', 'gimppath'],
-            'xfig': ['-b', 'xfig'],
-            'eps': ['-e'],
-            'svg': ['-s']
-        }
+        # self.format_options = {
+        #     'pdf': ['-b', 'pdf'],
+        #     'dxf': ['-b', 'dxf'],
+        #     'geojson': ['-b', 'geojson'],
+        #     'pdfpage': ['-b', 'pdfpage'],
+        #     'ps': ['-b', 'ps'],
+        #     'pgm': ['-b', 'pgm'],
+        #     'gimppath': ['-b', 'gimppath'],
+        #     'xfig': ['-b', 'xfig'],
+        #     'eps': ['-e'],
+        #     'svg': ['-s']
+        # }
 
     def convert(self):        
-        converter = ClassicConverter(self.input_file, 'pbm')
+        converter = ClassicConverter(self.input_file, 'bmp')
         if not converter.convert():
             log(f'Error converting file: {self.input_file}', "ERROR")
             return False
         
-        pbm_file = converter.output_file
+        bmp_file = converter.output_file
 
-        args = self.format_options.get(self.type_output_file, [])
         try:
-            subprocess.run(['potrace', pbm_file] + args + ['-o', self.output_file])
-            os.remove(pbm_file)
+            # args = self.format_options.get(self.type_output_file, [])
+            # subprocess.run(['potrace', bmp_file] + args + ['-o', self.output_file])
+            subprocess.run(['docker', 'run', '--rm', '-v', f"{os.getcwd()}:{os.getcwd()}", '-w', os.getcwd(), 'autotrace', '-preserve-width', '-color-count', str(VECTOR[self.type_output_file]), bmp_file, '-output-file', self.output_file, '-output-format', self.type_output_file])
+            os.remove(bmp_file)
             log(f'Converted {self.input_file} to {self.output_file}', "DEBUG")
             return True
         except subprocess.CalledProcessError as e:
@@ -92,7 +107,7 @@ class ManageConversion:
         self.convert()
 
     def convert(self):
-        if self.type_input_file.split("/")[1] in VECTOR or self.type_output_file in VECTOR:
+        if self.type_input_file.split("/")[1] in VECTOR.keys() or self.type_output_file in VECTOR.keys():
             self.converter = ImageToVectorConverter(self.input_file_name, self.type_output_file)
         else:
             self.converter = ClassicConverter(self.input_file_name, self.type_output_file)
