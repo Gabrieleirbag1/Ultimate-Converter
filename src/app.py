@@ -38,9 +38,10 @@ VECTOR = {
     'drd2': 0,
     'cgm': 0
 }
-ARCHIVE = ('tar', 'zip', 'gz', 'bz2', 'rar', '7z')
+ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
 
-ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + ARCHIVE
+
+ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + tuple(VECTOR.keys()) + ARCHIVE 
 
 files = UploadSet('files', ALLOWED_EXTENSIONS)
 configure_uploads(app, files)

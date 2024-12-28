@@ -3,7 +3,7 @@ const formats = {
     video: ['mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf'],
     image: ['jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'pnm', 'tga'],
     vector: ['svg', 'pdf', 'fig', 'ai', 'sk', 'p2e', 'mif', 'er', 'eps', 'emf', 'dxf', 'drd2', 'cgm'],
-    archive: ['tar', 'zip', 'gz', 'bz2', 'rar', '7z']
+    archive: ['7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip']
 };
 
 let types = [];
@@ -15,7 +15,7 @@ function handleFileUpload() {
     const h4_filename = document.getElementById('h4-filename');
 
     file_name = document.getElementById('file-input').files[0].name;
-    const extension = file_name.split(".").pop();
+    const extension = file_name.split('.').slice(1).join('.'); // Handle compound extensions
     let file_category = null;
 
     for (const category in formats) {

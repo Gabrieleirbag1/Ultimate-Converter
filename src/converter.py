@@ -1,5 +1,5 @@
 from logs import log
-import subprocess, os, random, ffmpeg
+import subprocess, os, random, ffmpeg, patoolib
 
 VECTOR = {
     'svg': 0,
@@ -16,6 +16,7 @@ VECTOR = {
     'drd2': 0,
     'cgm': 0
 }
+ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
 
 class BaseConverter:
     def __init__(self, input_file_name: str, type_output_file: str):
@@ -40,6 +41,34 @@ class BaseConverter:
             random_number = random.randint(1, 10000)
             output_file = os.path.join(self.output_dir, f'{base_name}_converted_{random_number}.{extension}')
         return output_file
+
+class ArchiveConverter(BaseConverter):
+    def __init__(self, input_file_name: str, type_output_file: str):
+        super().__init__(input_file_name, type_output_file)
+
+    def convert(self):
+        try:
+            unique_dir = os.path.join(self.output_dir, self.get_unique_output_file(self.input_file_name, 'dir'))
+            os.makedirs(unique_dir, exist_ok=True)
+            patoolib.extract_archive(self.input_file, outdir=unique_dir)
+            # Change the working directory to the unique directory
+            cwd = os.getcwd()
+            os.chdir(unique_dir)
+            # Create the output archive without including the full path
+            patoolib.create_archive(self.output_file, ('.',))
+            # Change back to the original working directory
+            os.chdir(cwd)
+            for root, dirs, files in os.walk(unique_dir, topdown=False):
+                for name in files:
+                    os.remove(os.path.join(root, name))
+                for name in dirs:
+                    os.rmdir(os.path.join(root, name))
+            os.rmdir(unique_dir)
+            log(f"Converted {self.input_file_name} to {self.output_file_name}", "INFO")
+            return True
+        except Exception as e:
+            log(f"An error occurred: {str(e)}", "ERROR")
+            return False
 
 class ImageToVectorConverter(BaseConverter):
     def __init__(self, input_file_name: str, type_output_file: str):
@@ -109,6 +138,8 @@ class ManageConversion:
     def convert(self):
         if self.type_input_file.split("/")[1] in VECTOR.keys() or self.type_output_file in VECTOR.keys():
             self.converter = ImageToVectorConverter(self.input_file_name, self.type_output_file)
+        elif self.type_input_file.split("/")[1] in ARCHIVE or self.type_output_file in ARCHIVE:
+            self.converter = ArchiveConverter(self.input_file_name, self.type_output_file)
         else:
             self.converter = ClassicConverter(self.input_file_name, self.type_output_file)
 
