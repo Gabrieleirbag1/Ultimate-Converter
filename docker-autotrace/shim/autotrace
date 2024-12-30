@@ -1,0 +1,190 @@
+#!/bin/sh
+#
+# autotrace (shim variant)
+#
+# As mentioned in the README.md, the shell alias does not support filepaths
+# that are outside of the current wording directory. (i.e. `../` and `/` are
+# not supported)
+#
+# This shell script solves this edge case issue by reading the arguments
+# and mounting the specific filepaths via docker. This approach is made
+# complicated by the fact that the arguments for autotrace are hard to parse.
+# In fact, a few compromises were necessary to get it working:
+#
+# - It does not support options using unambiguous abbreviations.
+# - It does not support options and values seperated by an equal sign.
+# - It does not support filepaths with colons.
+# - It may not handle complicated filepaths with special characters.
+
+# Exit, if any of the follwing commands fails.
+set -e
+
+# Exit, if any of the arguments have an equals sign.
+for var in "$@"
+do
+    case $var in
+        --background-color=*|\
+        -background-color=*|\
+        --color-count=*|\
+        -color-count=*|\
+        --corner-always-threshold=*|\
+        -corner-always-threshold=*|\
+        --corner-surround=*|\
+        -corner-surround=*|\
+        --corner-threshold=*|\
+        -corner-threshold=*|\
+        --despeckle-level=*|\
+        -despeckle-level=*|\
+        --despeckle-tightness=*|\
+        -despeckle-tightness=*|\
+        --dpi=*|\
+        -dpi=*|\
+        --error-threshold=*|\
+        -error-threshold=*|\
+        --filter-iterations=*|\
+        -filter-iterations=*|\
+        --input-format=*|\
+        -input-format=*|\
+        --line-reversion-threshold=*|\
+        -line-reversion-threshold=*|\
+        --line-threshold=*|\
+        -line-threshold=*|\
+        --output-file=*|\
+        -output-file=*|\
+        --output-format=*|\
+        -output-format=*|\
+        --tangent-surround=*|\
+        -tangent-surround=*|\
+        --width-factor=*|\
+        -width-factor=*)
+            echo "Error: autotrace shim does not support params with equals"
+            exit 1;;
+        (*) ;;
+    esac
+done
+
+is_single_arg=0
+is_output_file_arg=0
+output_file=''
+input_file=''
+
+for var in "$@"
+do
+    if [[ $is_output_file_arg == 1 ]]; then
+        output_file=$var
+        is_output_file_arg=0
+        continue;
+    fi
+
+    if [[ $is_single_arg == 1 ]]; then
+        is_single_arg=0
+        continue;
+    fi
+
+    case $var in
+        --background-color|\
+        -background-color|\
+        --color-count|\
+        -color-count|\
+        --corner-always-threshold|\
+        -corner-always-threshold|\
+        --corner-surround|\
+        -corner-surround|\
+        --corner-threshold|\
+        -corner-threshold|\
+        --despeckle-level|\
+        -despeckle-level|\
+        --despeckle-tightness|\
+        -despeckle-tightness|\
+        --dpi|\
+        -dpi|\
+        --error-threshold|\
+        -error-threshold|\
+        --filter-iterations|\
+        -filter-iterations|\
+        --input-format|\
+        -input-format|\
+        --line-reversion-threshold|\
+        -line-reversion-threshold|\
+        --line-threshold|\
+        -line-threshold|\
+        --output-format|\
+        -output-format|\
+        --tangent-surround|\
+        -tangent-surround|\
+        --width-factor|\
+        -width-factor)
+            # Single arg flag found. This means we'll skip the next argument.
+            is_single_arg=1
+            continue;;
+        (*) ;;
+    esac
+
+    if [ $var == '-output-file' ] || [ $var == '--output-file' ]; then
+        # Output-file flag found. This means the next argument will be the
+        # filename of the file we want to output.
+        is_output_file_arg=1
+        continue;
+    fi
+
+    case $var in --*|-*)
+        # We do not care for any other flags.
+        continue
+    esac
+
+    # Any argument not associated with a flag is automatically considerd an
+    # input file.
+    input_file=$var
+done
+
+# Test that the input file exists before touching it with docker. (It'll create
+# a directory if the file does not exist, which we really do not want)
+if [ ! -f "$input_file" ]; then
+    echo "Error: input file '${input_file}' does not exist"
+    exit 1
+fi
+
+# Shockingly, this appears to get the absolute path of files.
+# Sourced from: https://stackoverflow.com/a/5265862
+input_file_absolute=$(cd "$(dirname "$input_file")" && pwd -P)/$(basename "$input_file")
+output_file_absolute=''
+if [ -n "$output_file" ]; then
+    if [ ! -d `dirname $output_file` ]; then
+        echo "Error: output filepath directory '`dirname "$output_file"`' does not exist"
+        exit 1
+    fi
+    output_file_absolute=$(cd "$(dirname "$output_file")" && pwd -P)/$(basename "$output_file")
+fi
+
+# The next steps will require that the path does not contain any ':' characters
+# in the filepath.
+case "$input_file_absolute" in 
+  *:*)
+    echo "Error: autotrace shim does not support ':' in absolute filepaths: ${input_file_absolute}"
+    ;;
+esac
+case "$output_file_absolute" in 
+  *:*)
+    echo "Error: autotrace shim does not support ':' in absolute filepaths: ${output_file_absolute}"
+    ;;
+esac
+
+# Replace the relative filepaths with the absolute paths.
+if [ -n "$output_file_absolute" ]; then
+    autotrace_args=`echo $@ | sed -e "s:${input_file}:${input_file_absolute}:g" | sed -e "s:${output_file}:${output_file_absolute}:g"`
+else
+    autotrace_args=`echo $@ | sed -e "s:${input_file}:${input_file_absolute}:g"`
+fi
+
+# If we expect an output file, mount it. But in order to mount it, we need to
+# create it in the filesystem, otherwise docker will get confused and mount it
+# as a directory.
+if [ -n "$output_file_absolute" ]; then
+    touch $output_file_absolute
+    docker run --rm -v "$input_file_absolute:$input_file_absolute" -v "$output_file_absolute:$output_file_absolute" -w "$PWD" autotrace $autotrace_args
+    if ! [ -s "$output_file_absolute" ]; then
+        rm $output_file_absolute
+    fi
+else
+    docker run --rm -v "$input_file_absolute:$input_file_absolute" -w "$PWD" autotrace $autotrace_args
+fi
