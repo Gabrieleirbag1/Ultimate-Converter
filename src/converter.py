@@ -1,4 +1,5 @@
 from logs import log
+from shutil import rmtree
 import subprocess, os, random, ffmpeg, patoolib
 
 VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
@@ -44,16 +45,15 @@ class ArchiveConverter(BaseConverter):
             patoolib.create_archive(self.output_file, ('.',))
             # Change back to the original working directory
             os.chdir(cwd)
-            for root, dirs, files in os.walk(unique_dir, topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-            os.rmdir(unique_dir)
+            rmtree(unique_dir)
             log(f"Converted {self.input_file_name} to {self.output_file_name}", "INFO")
             return True
+        except patoolib.util.PatoolError as e:
+            log(f"Error extracting archive: {str(e)}", "ERROR")
+            return False
         except Exception as e:
             log(f"An error occurred: {str(e)}", "ERROR")
+            log(f"Line: {e.__traceback__.tb_lineno}", "ERROR")
             return False
 
 class ImageToVectorConverter(BaseConverter):

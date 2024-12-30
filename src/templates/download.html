@@ -3,6 +3,53 @@
 {% block content %}
     <div class="download-div card">
         <h1>Download Your Converted File</h1>
+        
+        <div class="file-info">
+            <p><strong>File Name:</strong> {{ filename }}</p>
+            <p><strong>File Size:</strong> {{ filesize }} MB</p>
+            <p><strong>File Type:</strong> {{ filetype }}</p>
+        </div>
+        
+        <div class="file-preview">
+            {% if format == "image" or format == "vector" %}
+                <img src="{{ url_for('download', token=token) }}" alt="File Preview" class="img-thumbnail">
+            {% elif  format == "video" %}
+                <video width="100%" controls>
+                    <source src="{{ url_for('download', token=token) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            {% elif format == "audio" %}
+                <audio controls>
+                    <source src="{{ url_for('download', token=token) }}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            {% elif format == "archive" %}
+                <p>File preview not available</p>
+            {% else %}
+                <p>File preview not available</p>
+            {% endif %}
+        </div>
+        
         <a class="btn btn-success" href="{{ url_for('download', token=token) }}">Download</a>
+        
+        <div class="share-link">
+            <p>Share this file:</p>
+            <input type="text" value="{{ request.url_root }}download/{{ token }}" readonly>
+            <button class="btn btn-primary" onclick="copyToClipboard()">Copy Link</button>
+        </div>
+        
+        <div class="links-div">
+            <a class="btn btn-secondary" href="{{ url_for('convert') }}">Convert Another File</a>
+            <a class="btn btn-secondary" href="{{ url_for('web') }}">Download from web</a>
+        </div>
     </div>
+
+    <script>
+        function copyToClipboard() {
+            var copyText = document.querySelector('.share-link input');
+            copyText.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard');
+        }
+    </script>
 {% endblock %}
