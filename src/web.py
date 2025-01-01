@@ -70,10 +70,10 @@ class YoutubeDownloader():
     def download_video(self):
         yt = YouTube(self.url)
         stream = self.set_stream(yt)
-        self.final_file_name = self.set_name(stream)
+        self.final_file_name = os.path.join(self.output_path, self.set_name(stream))
         
         log(f"Downloading {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
-        stream.download(self.output_path, filename=self.final_file_name)
+        stream.download(self.output_path, filename=os.path.basename(self.final_file_name))
         self.convert_file(stream.mime_type.split('/')[1])
 
     def download_playlist(self):
@@ -223,7 +223,7 @@ class TwitterDownloader:
 
         self.generate_file_name(data)
         self.download_video(highest_quality_url, self.final_file_name)
-            
+
     def convert_file(self, extension):
         if self.format != extension:
             converter = ClassicConverter(self.final_file_name, self.format)
@@ -295,6 +295,40 @@ class SpotifyDownloader:
         self.media_title: str = ""
         self.unique_dir: str = ""
 
+    def download(self):
+        self.check_spotify_type()
+        self.create_unique_directory()
+        command = [
+            'spotdl',
+            'download',
+            self.url,
+            '--output', self.unique_dir,
+        ]
+        try:
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
+            log(f"Downloaded successfully to {self.unique_dir}", "INFO")
+            output = result.stdout
+            log(output, "DEBUG")
+            if self.type == 'track':
+                self.set_final_file_name_for_track()
+                self.convert_file(self.final_file_name, "mp3")
+            else:
+                self.set_medias_list_for_album_or_playlist(output)
+                self.create_zip_for_album_or_playlist()
+                self.remove_unique_directory()
+        except subprocess.CalledProcessError as e:
+            log(f"Error during download: {e}", "ERROR")
+
+    def convert_file(self, file_path, extension):
+        if self.format != extension:
+            converter = ClassicConverter(file_path, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {file_path}", "ERROR")
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return converter.output_file
+        return file_path
+
     def check_spotify_type(self):
         if 'track' in self.url:
             self.type = 'track'
@@ -316,38 +350,20 @@ class SpotifyDownloader:
         except OSError:
             pass
 
-    def download(self):
-        self.check_spotify_type()
-        self.create_unique_directory()
-        command = [
-            'spotdl',
-            'download',
-            self.url,
-            '--output', self.unique_dir,
-        ]
-        try:
-            result = subprocess.run(command, check=True, capture_output=True, text=True)
-            log(f"Downloaded successfully to {self.unique_dir}", "INFO")
-            output = result.stdout
-            log(output, "DEBUG")
-            if self.type == 'track':
-                self.set_final_file_name_for_track()
-            else:
-                self.set_medias_list_for_album_or_playlist(output)
-                self.create_zip_for_album_or_playlist()
-                self.remove_unique_directory()
-        except subprocess.CalledProcessError as e:
-            log(f"Error during download: {e}", "ERROR")
-
     def set_final_file_name_for_track(self):
         files = os.listdir(self.unique_dir)
         if files:
             self.final_file_name = os.path.join(self.unique_dir, files[0])
+            log(f"Final file name: {self.final_file_name}", "WARNING")
         else:
             log("No files found in the download directory.", "ERROR")
 
     def set_medias_list_for_album_or_playlist(self, output):
-        self.medias_list = [os.path.join(self.unique_dir, f) for f in os.listdir(self.unique_dir)]
+        self.medias_list = []
+        for file in os.listdir(self.unique_dir):
+            file_path = os.path.join(self.unique_dir, file)
+            converted_file_path = self.convert_file(file_path, "mp3")
+            self.medias_list.append(converted_file_path)
 
         title_match = re.search(r'Found \d+ songs in (.*?) \(', output)
         if title_match:

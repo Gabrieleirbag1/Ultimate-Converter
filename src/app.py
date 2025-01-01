@@ -154,7 +154,7 @@ def web():
         
         if web.setup_download():
             filename = os.path.basename(web.filename)
-            filepath = os.path.join(os.path.dirname(__file__), "output", filename)
+            filepath = web.filename
             filetype = os.path.basename(filetype)
             create_media(filename, filetype, filepath)
             token = create_token(filepath)
