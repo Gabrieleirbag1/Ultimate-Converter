@@ -2,6 +2,7 @@ from logs import log
 from shutil import rmtree
 import subprocess, os, random, ffmpeg, patoolib
 
+IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga', 'eps')
 VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
 ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
 
@@ -102,15 +103,10 @@ class ClassicConverter(BaseConverter):
         print(f'Converting file: {self.input_file_name} to {self.output_file}')
         try:
             if self.type_output_file == 'rm':
-                probe = ffmpeg.probe(self.input_file)
-                video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
-                width = int(video_stream['width'])
-                height = int(video_stream['height'])
-                if width % 16 != 0:
-                    width = (width // 16) * 16
-                if height % 16 != 0:
-                    height = (height // 16) * 16
+                width, height = self.convert_16bit(16)
                 ffmpeg.input(self.input_file).output(self.output_file, vf=f'scale={width}:{height}', strict='-2').run(capture_stdout=True, capture_stderr=True)
+            elif self.type_output_file in IMAGE and self.input_file.endswith('.gif'):
+                ffmpeg.input(self.input_file).output(self.output_file, vframes=1).run(capture_stdout=True, capture_stderr=True)
             else:
                 ffmpeg.input(self.input_file).output(self.output_file, strict='-2').run(capture_stdout=True, capture_stderr=True)
             log(f'File converted successfully: {self.output_file_name}', "INFO")
@@ -123,6 +119,16 @@ class ClassicConverter(BaseConverter):
             log(f'An unexpected error occurred: {str(e)}', "ERROR")
             return False
         
+    def convert_xbit(self, x):
+        probe = ffmpeg.probe(self.input_file)
+        video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+        width = int(video_stream['width'])
+        height = int(video_stream['height'])
+        if width % x != 0:
+            width = (width // x) * x
+        if height % x != 0:
+            height = (height // x) * x
+        return width, height
 class ManageConversion:
     def __init__(self, input_file_name, type_output_file, type_input_file):
         self.input_file_name = input_file_name
@@ -133,9 +139,10 @@ class ManageConversion:
         self.convert()
 
     def convert(self):
-        if self.type_input_file.split("/")[1] in VECTOR.keys() or self.type_output_file in VECTOR.keys():
+        if os.path.basename(self.type_input_file) in VECTOR.keys() or self.type_output_file in VECTOR.keys():
+            log(f'Converting image to vector: {self.input_file_name} to {self.type_output_file}', "DEBUG")
             self.converter = ImageToVectorConverter(self.input_file_name, self.type_output_file)
-        elif self.type_input_file.split("/")[1] in ARCHIVE or self.type_output_file in ARCHIVE:
+        elif os.path.basename(self.type_input_file) in ARCHIVE or self.type_output_file in ARCHIVE:
             self.converter = ArchiveConverter(self.input_file_name, self.type_output_file)
         else:
             self.converter = ClassicConverter(self.input_file_name, self.type_output_file)

@@ -98,7 +98,7 @@ def download_page(token):
             format = get_format_category(media.filetype)
 
             log(f" format: {format}", "DEBUG")
-            return render_template('download.html', token=download_token.token, filename=media.filename, filesize=file_size_mb, format=format)
+            return render_template('download.html', token=download_token.token, filename=media.filename, filesize=file_size_mb, filetype=media.filetype, format=format)
     flash('The download link has expired or is invalid.', "error")
     return redirect(url_for('home'))
 

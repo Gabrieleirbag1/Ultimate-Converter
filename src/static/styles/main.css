@@ -344,6 +344,29 @@ select {
     flex-direction: column;
     justify-content: space-evenly;
     align-items: center;
+    width: 45%;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.file-info p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.file-info div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
 }
 
 .media-preview {
@@ -352,7 +375,7 @@ select {
 
 .links-div {
     display: flex;
-    gap: 20px;
+    gap: 25px;
     font-size: 0;
 }
 
