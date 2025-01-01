@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
-from flask_uploads import UploadSet, UploadNotAllowed, configure_uploads
+from flask_uploads import UploadSet, UploadNotAllowed, configure_uploads, ALL
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -27,12 +27,12 @@ VIDEO = ('mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf',
 IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga', 'eps')
 VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
 ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
+ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + tuple(VECTOR.keys()) + ARCHIVE
 
 FORMATS = {'audio': AUDIO, 'video': VIDEO, 'image': IMAGE, 'vector': VECTOR, 'archive': ARCHIVE}
+EXTENSION_EXCEPTIONS = ("tar.bz2", "tar.gz", "tar.lzma", "tar.xz")
 
-ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + tuple(VECTOR.keys()) + ARCHIVE 
-
-files = UploadSet('files', ALLOWED_EXTENSIONS)
+files = UploadSet('files', ALL)
 configure_uploads(app, files)
 
 def get_format_category(extension):
@@ -40,6 +40,14 @@ def get_format_category(extension):
         if extension in extensions:
             return category
     return None
+
+def get_full_extension(filename):
+    parts = filename.split('.')
+    if filename.endswith(EXTENSION_EXCEPTIONS):
+        return '.'.join(parts[-2:])
+    if len(parts) > 1:
+        return '.'.join(parts[1:])
+    return ''
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
@@ -123,7 +131,7 @@ def convert():
             flash('File type not allowed.', "error")
             return redirect(url_for('convert'))
         
-        filetype = file.content_type
+        filetype = get_full_extension(filename)
         output_format = request.form['file-format']
         log(filetype, "DEBUG")
         log(output_format, "DEBUG")
