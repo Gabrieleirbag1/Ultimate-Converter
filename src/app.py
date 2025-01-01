@@ -44,7 +44,7 @@ def get_format_category(extension):
 def start_scheduler():
     scheduler = BackgroundScheduler()
     if not scheduler.running:
-        scheduler.add_job(func=auto_remove_output_file, trigger="interval", seconds=5)
+        scheduler.add_job(func=auto_remove_output_file, trigger="interval", minutes=5)
         scheduler.start()
 
 def create_media(filename, filetype, filepath):
@@ -55,7 +55,7 @@ def create_media(filename, filetype, filepath):
 
 def create_token(output_file) -> str:
     token = str(uuid4())
-    expires_at = datetime.now() + timedelta(seconds=10)  # Token expires in 1 hour
+    expires_at = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
     media = Media.query.filter_by(filepath=output_file).first()
     download_token = DownloadToken(token=token, filename=media.filename, expires_at=expires_at)
     db.session.add(download_token)
@@ -98,7 +98,7 @@ def download_page(token):
             format = get_format_category(media.filetype)
 
             log(f" format: {format}", "DEBUG")
-            return render_template('download.html', token=download_token.token, filename=media.filename, filesize=file_size_mb, filetype=media.filetype, format=format)
+            return render_template('download.html', token=download_token.token, filename=media.filename, filesize=file_size_mb, format=format)
     flash('The download link has expired or is invalid.', "error")
     return redirect(url_for('home'))
 

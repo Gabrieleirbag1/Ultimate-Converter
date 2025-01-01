@@ -345,3 +345,23 @@ select {
     justify-content: space-evenly;
     align-items: center;
 }
+
+.media-preview {
+    max-height: 30vh;
+}
+
+.links-div {
+    display: flex;
+    gap: 20px;
+    font-size: 0;
+}
+
+.links-div .btn:hover svg {
+    fill: #005af0;
+}
+
+.file-preview-div {
+    display: flex;
+    gap: 30px;
+    margin: 2vh 0;
+}

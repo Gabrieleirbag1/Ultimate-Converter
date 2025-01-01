@@ -57,6 +57,16 @@ class YoutubeDownloader():
         else:
             self.download_video()
 
+    def convert_file(self, extension):
+        file_path = os.path.join(self.output_path, self.final_file_name)
+        if self.format != extension:
+            converter = ClassicConverter(file_path, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {self.final_file_name}", "ERROR")
+            if os.path.exists(self.final_file_name):
+                os.remove(self.final_file_name)
+            self.final_file_name = converter.output_file
+
     def download_video(self):
         yt = YouTube(self.url)
         stream = self.set_stream(yt)
@@ -64,6 +74,7 @@ class YoutubeDownloader():
         
         log(f"Downloading {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
         stream.download(self.output_path, filename=self.final_file_name)
+        self.convert_file(stream.mime_type.split('/')[1])
 
     def download_playlist(self):
         playlist = Playlist(self.url)
@@ -135,24 +146,33 @@ class InstagramDownloader:
             self.download_video(post)
         else:
             self.download_image(post)
+        
+    def convert_file(self, extension):
+        if self.format != extension:
+            converter = ClassicConverter(self.final_file_name, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {self.final_file_name}", "ERROR")
+            if os.path.exists(self.final_file_name):
+                os.remove(self.final_file_name)
+            self.final_file_name = converter.output_file
 
     def download_video(self, post):
         if self.format not in ['mp4', 'webm']:
             log(f"Format {self.format} not supported for videos. Defaulting to mp4.", "WARNING")
-            format = 'mp4'
+            extension = 'mp4'
         else:
-            format = self.format
+            extension = self.format
         video_url = post.video_url
-        self.download_file(video_url, post, format)
+        self.download_file(video_url, post, extension)
 
     def download_image(self, post):
         if self.format not in ['jpg', 'png']:
             log(f"Format {self.format} not supported for images. Defaulting to jpg.", "WARNING")
-            format = 'jpg'
+            extension = 'jpg'
         else:
-            format = self.format
+            extension = self.format
         image_url = post.url
-        self.download_file(image_url, post, format)
+        self.download_file(image_url, post, extension)
 
     def generate_file_name(self, file_name, extension):
         base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
@@ -168,13 +188,7 @@ class InstagramDownloader:
         self.generate_file_name(file_name, extension)
         log(f"Downloading {self.final_file_name} from {file_url}", "INFO")
         self.loader.download_pic(self.final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
-        if self.format != extension:
-            converter = ClassicConverter(self.final_file_name, self.format)
-            if not converter.convert():
-                log(f"Error converting file: {self.final_file_name}", "ERROR")
-            if os.path.exists(self.final_file_name):
-                os.remove(self.final_file_name)
-            self.final_file_name = converter.output_file
+        self.convert_file(extension)
 
     def get_unique_output_file(self, base_name, extension):
         output_file = os.path.join(self.output_path, f'{base_name}_converted.{extension}')
@@ -191,6 +205,33 @@ class TwitterDownloader:
 
         self.final_file_name: str
         self.medias_list: list[str] = []
+
+    def download(self):
+        """Extract the highest quality video url to download into a file
+
+        Args:
+            url (str): The twitter post URL to download from
+        """
+
+        api_url = f"https://twitsave.com/info?url={self.url}"
+
+        response = requests.get(api_url)
+        data = BeautifulSoup(response.text, "html.parser")
+        download_button = data.find_all("div", class_="origin-top-right")[0]
+        quality_buttons = download_button.find_all("a")
+        highest_quality_url = quality_buttons[0].get("href")  # Highest quality video url
+
+        self.generate_file_name(data)
+        self.download_video(highest_quality_url, self.final_file_name)
+            
+    def convert_file(self, extension):
+        if self.format != extension:
+            converter = ClassicConverter(self.final_file_name, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {self.final_file_name}", "ERROR")
+            if os.path.exists(self.final_file_name):
+                os.remove(self.final_file_name)
+            self.final_file_name = converter.output_file
 
     def get_unique_output_file(self, base_name, extension):
         output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
@@ -220,6 +261,7 @@ class TwitterDownloader:
 
         progress_bar.close()
         log(f"Downloaded {file_name} from {url}", "INFO")
+        self.convert_file("mp4")
 
     def generate_file_name(self, data):
         file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
@@ -230,25 +272,7 @@ class TwitterDownloader:
         if len(base_name) > 50:
             base_name = base_name[:50]
         log(f"Base name: {base_name}", "DEBUG")
-        self.final_file_name = self.get_unique_output_file(base_name, self.format)
-
-    def download(self):
-        """Extract the highest quality video url to download into a file
-
-        Args:
-            url (str): The twitter post URL to download from
-        """
-
-        api_url = f"https://twitsave.com/info?url={self.url}"
-
-        response = requests.get(api_url)
-        data = BeautifulSoup(response.text, "html.parser")
-        download_button = data.find_all("div", class_="origin-top-right")[0]
-        quality_buttons = download_button.find_all("a")
-        highest_quality_url = quality_buttons[0].get("href")  # Highest quality video url
-
-        self.generate_file_name(data)
-        self.download_video(highest_quality_url, self.final_file_name)
+        self.final_file_name = self.get_unique_output_file(base_name, "mp4")
 
     def check_url_website(self):
         if len(sys.argv) < 2:
