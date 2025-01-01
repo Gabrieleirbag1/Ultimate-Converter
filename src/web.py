@@ -1,10 +1,10 @@
 from pytubefix import YouTube, Stream, Playlist
 from instaloader import Post, Instaloader
-import random, os, re, sys, requests, subprocess
+import random, os, re, sys, requests, subprocess, string, zipfile, uuid
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
-import string, zipfile, uuid
+from converter import ClassicConverter
 
 class FileManager:
     def __init__(self, media_files: list[str], output_path: str, media_title: str):
@@ -139,16 +139,20 @@ class InstagramDownloader:
     def download_video(self, post):
         if self.format not in ['mp4', 'webm']:
             log(f"Format {self.format} not supported for videos. Defaulting to mp4.", "WARNING")
-            self.format = 'mp4'
+            format = 'mp4'
+        else:
+            format = self.format
         video_url = post.video_url
-        self.download_file(video_url, post, self.format)
+        self.download_file(video_url, post, format)
 
     def download_image(self, post):
         if self.format not in ['jpg', 'png']:
             log(f"Format {self.format} not supported for images. Defaulting to jpg.", "WARNING")
-            self.format = 'jpg'
+            format = 'jpg'
+        else:
+            format = self.format
         image_url = post.url
-        self.download_file(image_url, post, self.format)
+        self.download_file(image_url, post, format)
 
     def generate_file_name(self, file_name, extension):
         base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
@@ -164,6 +168,13 @@ class InstagramDownloader:
         self.generate_file_name(file_name, extension)
         log(f"Downloading {self.final_file_name} from {file_url}", "INFO")
         self.loader.download_pic(self.final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
+        if self.format != extension:
+            converter = ClassicConverter(self.final_file_name, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {self.final_file_name}", "ERROR")
+            if os.path.exists(self.final_file_name):
+                os.remove(self.final_file_name)
+            self.final_file_name = converter.output_file
 
     def get_unique_output_file(self, base_name, extension):
         output_file = os.path.join(self.output_path, f'{base_name}_converted.{extension}')
