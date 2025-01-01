@@ -101,7 +101,18 @@ class ClassicConverter(BaseConverter):
     def convert(self):
         print(f'Converting file: {self.input_file_name} to {self.output_file}')
         try:
-            ffmpeg.input(self.input_file).output(self.output_file).run(capture_stdout=True, capture_stderr=True)
+            if self.type_output_file == 'rm':
+                probe = ffmpeg.probe(self.input_file)
+                video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+                width = int(video_stream['width'])
+                height = int(video_stream['height'])
+                if width % 16 != 0:
+                    width = (width // 16) * 16
+                if height % 16 != 0:
+                    height = (height // 16) * 16
+                ffmpeg.input(self.input_file).output(self.output_file, vf=f'scale={width}:{height}', strict='-2').run(capture_stdout=True, capture_stderr=True)
+            else:
+                ffmpeg.input(self.input_file).output(self.output_file, strict='-2').run(capture_stdout=True, capture_stderr=True)
             log(f'File converted successfully: {self.output_file_name}', "INFO")
             return True
         except ffmpeg.Error as e:

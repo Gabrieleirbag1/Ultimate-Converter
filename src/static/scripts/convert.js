@@ -1,7 +1,7 @@
 const formats = {
-    audio: ['mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'alac', 'aiff', 'amr', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm', 'vorbis'],
+    audio: ['mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'aiff', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm'],
     video: ['mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf'],
-    image: ['jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'pnm', 'tga'],
+    image: ['jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga', 'eps'],
     vector: ['svg', 'pdf', 'fig', 'ai', 'sk', 'p2e', 'mif', 'er', 'eps', 'emf', 'dxf', 'drd2', 'cgm'],
     archive: ['7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip']
 };
@@ -14,8 +14,9 @@ function handleFileUpload() {
     const drop_area = document.getElementById('drop-area');
     const h4_filename = document.getElementById('h4-filename');
 
-    file_name = document.getElementById('file-input').files[0].name;
-    const extension = file_name.split('.').slice(1).join('.'); // Handle compound extensions
+    const file = document.getElementById('file-input').files[0];
+    const file_name = file.name;
+    const extension = getExtension(file_name);
     let file_category = null;
 
     for (const category in formats) {
@@ -60,6 +61,17 @@ function handleFileUpload() {
         file_type.appendChild(option);
     })
     updateFormats();
+}
+
+function getExtension(fileName) {
+    const parts = fileName.split('.');
+    if (parts.length > 1) {
+        const possibleExtension = parts.slice(-2).join('.');
+        if (formats.archive.includes(possibleExtension)) {
+            return possibleExtension;
+        }
+    }
+    return parts.pop();
 }
 
 function updateFormats() {
@@ -137,4 +149,3 @@ document.addEventListener("DOMContentLoaded", function() {
         handleFileUpload();
     }
 });
-
