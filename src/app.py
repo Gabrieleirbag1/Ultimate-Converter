@@ -125,14 +125,17 @@ def convert():
     if request.method == 'POST' and 'file' in request.files:
         print(request.files, request.form, "HERE")
         file = request.files['file']
+        filetype = get_full_extension(file.filename)
+        output_format = request.form['file-format']
         try:
-            filename = files.save(file)
+            if filetype in ALLOWED_EXTENSIONS:
+                filename = files.save(file)
+            else:
+                raise UploadNotAllowed
         except UploadNotAllowed:
             flash('File type not allowed.', "error")
             return redirect(url_for('convert'))
         
-        filetype = get_full_extension(filename)
-        output_format = request.form['file-format']
         log(filetype, "DEBUG")
         log(output_format, "DEBUG")
 

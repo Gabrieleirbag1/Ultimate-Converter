@@ -98,8 +98,7 @@ function displayFlashMessage(message) {
       </div>`;
 
     initializeModal();
-    document.getElementById("script_file").value = "";
-  }
+}
 
 document.addEventListener("DOMContentLoaded", function() {
     const dropBox = document.getElementById("drop-box"),
