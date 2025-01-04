@@ -24,13 +24,20 @@ db.init_app(app)
 
 AUDIO = ('mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'aiff', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm')
 VIDEO = ('mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf')
-IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga', 'eps')
-VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
+IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga')
+VECTOR = ('svg', 'pdf', 'eps', 'svgz', 'dxf', 'emf', 'wmf', 'xaml', 'fxg', 'hpgl', 'odg', 'ps', 'sif')
+AUTOTRACE_VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
+VECTOR_MERGED = tuple(VECTOR) + tuple(AUTOTRACE_VECTOR.keys())
 ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
-ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + tuple(VECTOR.keys()) + ARCHIVE
+ALLOWED_EXTENSIONS = AUDIO + VIDEO + IMAGE + VECTOR + ARCHIVE
 
-FORMATS = {'audio': AUDIO, 'video': VIDEO, 'image': IMAGE, 'vector': VECTOR, 'archive': ARCHIVE}
-EXTENSION_EXCEPTIONS = ("tar.bz2", "tar.gz", "tar.lzma", "tar.xz")
+FORMATS = {
+    'audio': AUDIO,
+    'video': VIDEO,
+    'image': IMAGE,
+    'vector': VECTOR_MERGED,
+    'archive': ARCHIVE
+}
 
 files = UploadSet('files', ALL)
 configure_uploads(app, files)
@@ -42,12 +49,10 @@ def get_format_category(extension):
     return None
 
 def get_full_extension(filename):
-    parts = filename.split('.')
-    if filename.endswith(EXTENSION_EXCEPTIONS):
-        return '.'.join(parts[-2:])
-    if len(parts) > 1:
-        return '.'.join(parts[1:])
-    return ''
+    for ext in ALLOWED_EXTENSIONS:
+        if filename.lower().endswith(ext):
+            return ext
+    return None
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
@@ -123,7 +128,6 @@ def download(token):
 @app.route('/convert', methods=['GET', 'POST'])
 def convert():
     if request.method == 'POST' and 'file' in request.files:
-        print(request.files, request.form, "HERE")
         file = request.files['file']
         filetype = get_full_extension(file.filename)
         output_format = request.form['file-format']

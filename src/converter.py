@@ -2,9 +2,10 @@ from logs import log
 from shutil import rmtree
 import subprocess, os, random, ffmpeg, patoolib
 
-IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga', 'eps')
-VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
+IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga')
+VECTOR = ('svg', 'pdf', 'eps', 'svgz', 'dxf', 'emf', 'wmf', 'xaml', 'fxg', 'hpgl', 'odg', 'ps', 'sif')
 ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
+AUTOTRACE_VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
 
 class BaseConverter:
     def __init__(self, input_file_name: str, type_output_file: str):
@@ -84,9 +85,50 @@ class ImageToVectorConverter(BaseConverter):
         try:
             # args = self.format_options.get(self.type_output_file, [])
             # subprocess.run(['potrace', bmp_file] + args + ['-o', self.output_file])
-            subprocess.run(['docker', 'run', '--rm', '-v', f"{os.getcwd()}:{os.getcwd()}", '-w', os.getcwd(), 'autotrace', '-preserve-width', '-color-count', str(VECTOR[self.type_output_file]), bmp_file, '-output-file', self.output_file, '-output-format', self.type_output_file])
+            subprocess.run(['docker', 'run', '--rm', '-v', f"{os.getcwd()}:{os.getcwd()}", '-w', os.getcwd(), 'autotrace', '-preserve-width', '-color-count', str(AUTOTRACE_VECTOR[self.type_output_file]), bmp_file, '-output-file', self.output_file, '-output-format', self.type_output_file])
             os.remove(bmp_file)
             log(f'Converted {self.input_file} to {self.output_file}', "DEBUG")
+            return True
+        except subprocess.CalledProcessError as e:
+            log(f'Error during subprocess execution: {e}', "ERROR")
+            return False
+        except Exception as e:
+            log(f'An unexpected error occurred during conversion: {str(e)}', "ERROR")
+            return False
+    
+class VectorConverter(BaseConverter):
+    def __init__(self, input_file_name: str, type_output_file: str, type_input_file: str):
+        self.original_type_output_file = type_output_file
+        self.type_input_file = type_input_file
+        type_output_file = self.check_format(type_output_file)
+        super().__init__(input_file_name, type_output_file)
+
+    def check_format(self, type_output_file):
+        if type_output_file in IMAGE and type_output_file != "png":
+            return "png"
+        return type_output_file
+
+    def convert_to_png(self):
+        png_output_file = self.get_unique_output_file(self.input_file_name.rsplit('.', 1)[0], 'png')
+        try:
+            ffmpeg.input(self.input_file).output(png_output_file).run(capture_stdout=True, capture_stderr=True)
+            self.input_file = png_output_file
+        except ffmpeg.Error as e:
+            error_message = e.stderr.decode() if e.stderr else str(e)
+            log(f'Error converting file to PNG: {error_message}', "ERROR")
+            raise
+
+    def convert(self):
+        try:
+            if self.type_input_file in IMAGE and not self.input_file.endswith('.png'):
+                self.convert_to_png()
+            subprocess.run(['inkscape', self.input_file, '--export-type=' + self.type_output_file, '--export-filename=' + self.output_file], check=True)
+            if self.original_type_output_file != self.type_output_file:
+                converter = ClassicConverter(self.output_file, self.original_type_output_file)
+                if not converter.convert():
+                    log(f'Error converting file: {self.output_file}', "ERROR")
+                    return False
+                self.output_file = converter.output_file
             return True
         except subprocess.CalledProcessError as e:
             log(f'Error during subprocess execution: {e}', "ERROR")
@@ -100,7 +142,6 @@ class ClassicConverter(BaseConverter):
         super().__init__(input_file_name, type_output_file)
 
     def convert(self):
-        print(f'Converting file: {self.input_file_name} to {self.output_file}')
         try:
             if self.type_output_file == 'rm':
                 width, height = self.convert_16bit(16)
@@ -139,9 +180,11 @@ class ManageConversion:
         self.convert()
 
     def convert(self):
-        if os.path.basename(self.type_input_file) in VECTOR.keys() or self.type_output_file in VECTOR.keys():
-            log(f'Converting image to vector: {self.input_file_name} to {self.type_output_file}', "DEBUG")
-            self.converter = ImageToVectorConverter(self.input_file_name, self.type_output_file)
+        if "(autotrace)" in self.type_output_file:
+            type_output_file = self.type_output_file.replace(" (autotrace)", "")
+            self.converter = ImageToVectorConverter(self.input_file_name, type_output_file)
+        elif self.type_input_file in VECTOR or self.type_output_file in VECTOR:
+            self.converter = VectorConverter(self.input_file_name, self.type_output_file, self.type_input_file)
         elif os.path.basename(self.type_input_file) in ARCHIVE or self.type_output_file in ARCHIVE:
             self.converter = ArchiveConverter(self.input_file_name, self.type_output_file)
         else:
