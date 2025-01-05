@@ -17,7 +17,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['UPLOADED_FILES_DEST'] = os.path.join(app.root_path, 'uploads')
 app.config['OUTPUT_FILES_DEST'] = os.path.join(app.root_path, 'output')
-app.config['MAX_CONTENT_LENGTH'] = 250 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 # 1000 MB
+app.config['MAX_OUTPUT_FOLDER_SIZE'] = 20 * 1024 * 1024 * 1024  # 20 GB
 app.secret_key = 'supersecretkey'
 
 db.init_app(app)
@@ -36,6 +37,21 @@ def get_full_extension(filename):
         if filename.lower().endswith(ext):
             return ext
     return None
+
+def get_folder_size(folder: str) -> int:
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(folder):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size
+
+def check_size(file_size: int) -> bool:
+    output_folder_size = get_folder_size(app.config['OUTPUT_FILES_DEST'])
+    max_size = app.config['MAX_OUTPUT_FOLDER_SIZE']
+    if output_folder_size + file_size > max_size:
+        return False
+    return True
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
@@ -112,6 +128,13 @@ def download(token):
 def convert():
     if request.method == 'POST' and 'file' in request.files:
         file = request.files['file']
+        file_size = len(file.read())
+        file.seek(0)  # Reset file pointer to the beginning
+
+        if not check_size(file_size):
+            flash('The total size of the output folder exceeds the maximum allowed size.', "error")
+            return redirect(url_for('convert'))
+
         filetype = get_full_extension(file.filename)
         output_format = request.form['file-format']
         try:
@@ -153,6 +176,13 @@ def web():
         if web.setup_download():
             filename = os.path.basename(web.filename)
             filepath = web.filename
+            file_size = os.path.getsize(filepath)
+            
+            if not check_size(file_size):
+                flash('The total size of the output folder exceeds the maximum allowed size.', "error")
+                os.remove(filepath)  # Remove the downloaded file
+                return redirect(url_for('web'))
+
             filetype = os.path.basename(filetype)
             if os.path.exists(filepath):
                 create_media(filename, filetype, filepath)
