@@ -1,11 +1,8 @@
-from logs import log
 from shutil import rmtree
 import subprocess, os, random, ffmpeg, patoolib
 
-IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga')
-VECTOR = ('svg', 'pdf', 'eps', 'svgz', 'dxf', 'emf', 'wmf', 'xaml', 'fxg', 'hpgl', 'odg', 'ps', 'sif')
-ARCHIVE = ('7z', 'cb7', 'cbt', 'cbz', 'cpio', 'iso', 'jar', 'tar', 'tar.bz2', 'tar.gz', 'tar.lzma', 'tar.xz', 'tbz2', 'tgz', 'txz', 'zip')
-AUTOTRACE_VECTOR = {'svg': 0, 'pdf': 0, 'fig': 2, 'ai': 0, 'sk': 0, 'p2e': 0, 'mif': 256, 'er': 0, 'eps': 0, 'emf': 0, 'dxf': 0, 'drd2': 0, 'cgm': 0}
+from utils import IMAGE, VIDEO, VECTOR, ARCHIVE, AUTOTRACE_VECTOR
+from logs import log
 
 class BaseConverter:
     def __init__(self, input_file_name: str, type_output_file: str):
