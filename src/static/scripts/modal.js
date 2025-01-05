@@ -21,6 +21,11 @@ function initializeModal() {
     }
 }
 
+function fileTypeError(message, id) {
+    displayFlashMessage(message, "error");
+    document.getElementById(id).value = null
+}
+
 function displayFlashMessage(message) {
     const flashContainer = document.getElementById("flash-container");
     flashContainer.innerHTML = 

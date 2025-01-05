@@ -35,9 +35,7 @@ function handleFileUpload() {
         types = ["Archive"];
     }
     else {
-        displayFlashMessage("Invalid file format. Please upload a valid file format.");
-        // delete the file from the input
-        document.getElementById('file-input').value = null;
+        fileTypeError("Invalid file format. Please upload a valid file format.", "file-input");
         return;
     }
 

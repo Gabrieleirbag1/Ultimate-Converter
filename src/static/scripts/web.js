@@ -12,6 +12,21 @@ function checkUrlWebsite(url) {
     }
 }
 
+function checkInstagramUrl(url) {
+    if (url.includes('instagram.com')) {
+        if (url.match(/\/reel\//)) {
+            return "Reel";
+        } else if (url.match(/\/p\//)) {
+            return "Photo";
+        } else if (url.match(/\/tv\//)) {
+            return "Video";
+        } else {
+            return "Unknown";
+        }
+    }
+    return null;
+}
+
 function handleFileUpload() {
     const file_type = document.getElementById('file-type');
     const file_preview = document.getElementById('file-preview');
@@ -28,7 +43,16 @@ function handleFileUpload() {
     }
 
     else if (media == "Instagram"){
-        types = ["Image", "Video", "Audio"]
+        if (checkInstagramUrl(url) == "Photo"){
+            types = ["Image", "Video"]
+        }
+        else if (checkInstagramUrl(url) == "Unknown"){
+            fileTypeError("Invalid Instagram URL. Please enter a valid URL.", "url");
+            return;
+        }
+        else {
+            types = ["Video", "Audio", "Image"]
+        }
     }
 
     else if (media == "Twitter"){
@@ -40,9 +64,7 @@ function handleFileUpload() {
     }
 
     else{
-        displayFlashMessage("Media not supported. Please enter a valid URL.");
-        // delete the file from the input
-        document.getElementById('url').value = null
+        fileTypeError("Media not supported. Please enter a valid URL.", "url");
         return;
     }
 
@@ -84,5 +106,5 @@ function handleEnterEvent() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    handleFormEvents();
+    handleEnterEvent();
 });

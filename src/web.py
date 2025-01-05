@@ -409,15 +409,3 @@ class WebDownloader:
         self.filename = web_dl.final_file_name
         self.medias_list = web_dl.medias_list
         return True
-
-# if __name__ == "__main__":
-#     url = "https://open.spotify.com/playlist/37i9dQZF1EpiylCZQ6XZD4?si=f40e99cc1b014363" # Playlist
-#     url = "https://open.spotify.com/intl-fr/album/0DsMhU0ERzMt6xvtGpgXvW?si=8UmBjpT6Qbe0STQvgKyRlg" # Album
-
-# if __name__ == "__main__":
-#     # downloader = WebDownloader("https://www.youtube.com/watch?v=icPHcK_cCF4&pp=ygUXeW91dHViZSA1IHNlY29uZHMgdmlkZW8%3D")
-#     # downloader = WebDownloader("https://www.instagram.com/zurgloxleterrible/p/C61bFusC8ce/?hl=hu  ")
-#     downloader = WebDownloader("https://x.com/JixonKds/status/1854489456423666137")
-
-if __name__ == "__main__":
-    WebDownloader("https://open.spotify.com/track/40EL2KYZw9V2RLdekNCQM6?si=01e5b27b43a7402e")
