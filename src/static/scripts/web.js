@@ -51,7 +51,7 @@ function handleFileUpload() {
     }
 
     else{
-        window.alert("Media not supported");
+        displayFlashMessage("Media not supported. Please enter a valid URL.");
         // delete the file from the input
         document.getElementById('url').value = null
         return;
@@ -82,3 +82,24 @@ function updateFormats() {
         file_format.appendChild(option);
     });
 }
+
+function manageFormEvents() {
+    const urlInput = document.getElementById("url");
+    const form = document.getElementById("web-form");
+
+    urlInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleFileUpload();
+        }
+    });
+
+    form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        handleFileUpload();
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    manageFormEvents();
+});

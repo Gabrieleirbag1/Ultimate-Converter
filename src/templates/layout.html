@@ -4,18 +4,9 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{% block title %}Ultimate Converter{% endblock %}</title>
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='styles/main.css') }}"
-        />
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='styles/media.css') }}"
-        />
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='styles/modal.css') }}"
-        />
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/media.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/modal.css') }}" />
         {% block styles %}{% endblock styles %}
         <script src="{{ url_for('static', filename='scripts/modal.js') }}"></script>
         {% block scripts %}{% endblock %}
@@ -24,8 +15,8 @@
         <header class="header-main">
             <h1>Ultimate Converter</h1>
             <nav>
-                <a href="{{ url_for('convert') }}">Convert</a>
-                <a href="{{ url_for('web') }}">Web</a>
+                <a href="{{ url_for('convert') }}">File Converter</a>
+                <a href="{{ url_for('web') }}">Web Converter</a>
                 <a href="{{ url_for('home') }}">Home</a>
             </nav>
         </header>

@@ -14,12 +14,24 @@ function initializeModal() {
         });
 
         document.addEventListener('click', e => {
-            if (!modal.contains(e.target)) {
+            if (!modal.contains(e.target) && !e.target.hasAttribute('data-modal')) {
                 modal.classList.add('hide');
             }
         });
     }
 }
 
-// Call the function to set up the modal when the script is first loaded
+function displayFlashMessage(message) {
+    const flashContainer = document.getElementById("flash-container");
+    flashContainer.innerHTML = 
+    `<div id="modal" class="modal">
+              <img src="/static/images/alert.png" width="44" height="38" />
+              <span class="title">Oh snap!</span>
+              <p>${message}</p>
+              <div id="dismiss-button" class="button">Dismiss</div>
+      </div>`;
+
+    initializeModal();
+}
+
 document.addEventListener("DOMContentLoaded", initializeModal);

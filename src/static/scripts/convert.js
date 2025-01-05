@@ -89,19 +89,6 @@ function updateFormats() {
     });
 }
 
-function displayFlashMessage(message) {
-    const flashContainer = document.getElementById("flash-container");
-    flashContainer.innerHTML = 
-    `<div id="modal" class="modal">
-              <img src="/static/images/alert.png" width="44" height="38" />
-              <span class="title">Oh snap!</span>
-              <p>${message}</p>
-              <div id="dismiss-button" class="button">Dismiss</div>
-      </div>`;
-
-    initializeModal();
-}
-
 document.addEventListener("DOMContentLoaded", function() {
     const dropBox = document.getElementById("drop-box"),
         button = document.getElementById("btn-choose-file"),
