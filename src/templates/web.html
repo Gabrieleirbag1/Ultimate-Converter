@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% block scripts %} 
+    <script src="static/scripts/utils.js"></script>
     <script src="static/scripts/web.js"></script>
     <script src="static/scripts/fixing-size.js"></script>
 {% endblock %}
@@ -12,7 +13,7 @@
             <div id="fixed-card" class="card">
                 <h3>Download from web</h3>
                 <div class="web-box">
-                    <form id="web-form" class="download-form" action="{{ url_for('web') }}" method="post" enctype="multipart/form-data">
+                    <form class="download-form" action="{{ url_for('web') }}" method="post" enctype="multipart/form-data">
                         
                         <div id="web-div" class="web-div fixed-sub-div">
                             <div class="file-preview-header">

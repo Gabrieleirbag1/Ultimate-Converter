@@ -12,5 +12,5 @@ function copyToClipboard() {
     setTimeout(function() {
         checkIcon.style.display = 'none';
         shareIcon.style.display = 'block';
-    }, 2000);
+    }, 1500);
 }
