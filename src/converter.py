@@ -186,7 +186,3 @@ class ManageConversion:
             self.converter = ArchiveConverter(self.input_file_name, self.type_output_file)
         else:
             self.converter = ClassicConverter(self.input_file_name, self.type_output_file)
-
-if __name__ == '__main__':
-    convert_zip = ManageConversion('/home/frigiel/Téléchargements/test.zip', 'tar', 'application/zip')
-    convert_zip.converter.convert()
