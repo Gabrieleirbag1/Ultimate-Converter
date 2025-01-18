@@ -3,39 +3,51 @@
 {% block styles %}
 {% endblock %}
 
+{% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/caroussel.js') }}"></script>
+{% endblock %}
+
 {% block content %}
     <section class="index-section">
-        <div class="card welcome-div">
-            <div class="welcome-title-div">
-                <h1>Welcome to Ultimate Converter !</h1>
-                <p> The ultimate tool to convert files from one format to another and download media from popular platforms.</p>
-            </div>
-            <div class="index-buttons-div">
-                <button class="btn" onclick="window.location.href='{{ url_for('convert') }}';">Convert a file</button>
-                <button class="btn" onclick="window.location.href='{{ url_for('web') }}';">Download from web</button>
+        <div class="split-div">
+            <div class="card welcome-div">
+                <div class="welcome-title-div">
+                    <h1>Welcome to Ultimate Converter !</h1>
+                    <p> The ultimate tool to convert files from one format to another and download media from popular platforms.</p>
+                </div>
+                <div class="index-buttons-div">
+                    <button class="btn" onclick="window.location.href='{{ url_for('convert') }}';">Convert a file</button>
+                    <button class="btn" onclick="window.location.href='{{ url_for('web') }}';">Download from web</button>
+                </div>
             </div>
         </div>
-        <div class="info-div">
-            <div class="card index-card">
-                <div class="card-title">
-                    <h2>What is Ultimate Converter?</h2>
-                    <img src="{{ url_for('static', filename='images/converter.svg') }}" alt="Icon" class="card-icon">
+        <div class="split-div">
+            <div class="info-div">
+                <div class="card index-card">
+                    <div class="card-title">
+                        <h2>What is Ultimate Converter?</h2>
+                        <img src="{{ url_for('static', filename='images/converter.svg') }}" alt="Icon" class="card-icon">
+                    </div>
+                    <p>Ultimate Converter is a web application that allows you to convert files from one format to another. Ultimate Converter handle images, videos, audios, vectors and archives. You can also download files from popular platforms like YouTube, Instagram, X (formerly Twitter), and Spotify.</p>
                 </div>
-                <p>Ultimate Converter is a web application that allows you to convert files from one format to another. Ultimate Converter handle images, videos, audios, vectors and archives. You can also download files from popular platforms like YouTube, Instagram, X (formerly Twitter), and Spotify.</p>
-            </div>
-            <div class="card index-card">
-                <div class="card-title">
-                    <h2>Why use Ultimate Converter?</h2>
-                    <img src="{{ url_for('static', filename='images/why-use.svg') }}" alt="Icon" class="card-icon">
+                <div class="card index-card">
+                    <div class="card-title">
+                        <h2>Why use Ultimate Converter?</h2>
+                        <img src="{{ url_for('static', filename='images/why-use.svg') }}" alt="Icon" class="card-icon">
+                    </div>
+                    <p>Ultimate Converter is a free and easy-to-use tool that allows you to convert files quickly and easily. You can convert files from any device, and there is no need to download any software. Additionally, you can download videos and audio from YouTube, Instagram, X, and Spotify directly to your device.</p>
                 </div>
-                <p>Ultimate Converter is a free and easy-to-use tool that allows you to convert files quickly and easily. You can convert files from any device, and there is no need to download any software. Additionally, you can download videos and audio from YouTube, Instagram, X, and Spotify directly to your device.</p>
-            </div>
-            <div class="card index-card">
-                <div class="card-title">
-                    <h2>How to use Ultimate Converter?</h2>
-                    <img src="{{ url_for('static', filename='images/easy-use.svg') }}" alt="Icon" class="card-icon">
+                <div class="card index-card">
+                    <div class="card-title">
+                        <h2>How to use Ultimate Converter?</h2>
+                        <img src="{{ url_for('static', filename='images/easy-use.svg') }}" alt="Icon" class="card-icon">
+                    </div>
+                    <p>Using Ultimate Converter is simple. Just click on the "Convert a file" button, select the file you want to convert, choose the format you want to convert it to, and click on the "Convert" button. Your file will be converted in seconds. To download media from YouTube, Instagram, X, or Spotify, simply paste the URL into the provided field and click "Download".</p>
                 </div>
-                <p>Using Ultimate Converter is simple. Just click on the "Convert a file" button, select the file you want to convert, choose the format you want to convert it to, and click on the "Convert" button. Your file will be converted in seconds. To download media from YouTube, Instagram, X, or Spotify, simply paste the URL into the provided field and click "Download".</p>
+                <div class="carousel-controls">
+                    <button id="prev-btn">&lt;</button>
+                    <button id="next-btn">&gt;</button>
+                </div>
             </div>
         </div>
     </section>

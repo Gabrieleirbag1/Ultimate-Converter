@@ -1,11 +1,132 @@
+/* ############################# STYLES FOR THE LAYOUT PAGE ############################# */
+
+@media only screen and (max-width: 768px) {
+
+    .header-main h1 {
+        font-size: 1.2em;
+    }
+
+    .header-main nav {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .header-main nav a {
+        font-size: 1em;
+    }
+}
+
 /* ############################# STYLES FOR THE INDEX PAGE ############################# */
 
 @media only screen and (max-width: 768px) {
-    .index-card{
-        margin: 2vw;
+
+    .split-div {
+        height: 80vh;
+        margin: 3vh 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .index-section {
+        margin: 0px
+    }
+
+    .welcome-div {
+        margin: 0;
+        height: 70vh;
+        justify-content: space-around;
+    }
+
+    .welcome-title-div h1 {
+        font-size: 2em;
+    }
+
+    .card{
+        width: 85%;
+    }
+
+    .index-buttons-div {
+        gap: 10px;
+        flex-direction: column;
+    }
+
+    .index-buttons-div .btn {
+        font-size: 1em;
+        width: 100%;
+    }
+
+    .info-div {
+        width: 100vw;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.5s ease;
+        gap: 0px;
+    }
+
+    .index-card {
+        transition: transform 0.5s ease;
+        margin: 0;
+    }
+
+    .carousel-controls {
+        display: flex;
+        justify-content: space-between;
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+
+    .carousel-controls button {
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
     }
     
 }
+
+/* ############################# STYLES FOR THE WEB / CONVERT PAGE ############################# */
+
+.card h3 {
+    text-align: center;
+}
+
+.drop-file-div {
+    gap: 40px;
+}
+
+.web-div {
+    gap: 10px;
+}
+
+#h4-filename {
+    font-size: 1em;
+}
+
+.choose-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+select {
+    width: 90%;
+    padding: 12px 10px;
+}
+
+/* ############################# STYLES FOR THE DOWNLOAD PAGE ############################# */
+
+.links-div {
+    gap: 10px;
+}
+
 
 @media only screen and (orientation: portrait) {
     .index-card {
