@@ -82,7 +82,8 @@ class ImageToVectorConverter(BaseConverter):
         try:
             # args = self.format_options.get(self.type_output_file, [])
             # subprocess.run(['potrace', bmp_file] + args + ['-o', self.output_file])
-            subprocess.run(['docker', 'run', '--rm', '-v', f"{os.getcwd()}:{os.getcwd()}", '-w', os.getcwd(), 'autotrace', '-preserve-width', '-color-count', str(AUTOTRACE_VECTOR[self.type_output_file]), bmp_file, '-output-file', self.output_file, '-output-format', self.type_output_file])
+            script_dir_name = os.path.dirname(os.path.realpath(__file__))
+            subprocess.run(['docker', 'run', '--rm', '-v', f"{script_dir_name}:{script_dir_name}", '-w', script_dir_name, 'autotrace', '-preserve-width', '-color-count', str(AUTOTRACE_VECTOR[self.type_output_file]), bmp_file, '-output-file', self.output_file, '-output-format', self.type_output_file])
             os.remove(bmp_file)
             log(f'Converted {self.input_file} to {self.output_file}', "DEBUG")
             return True
