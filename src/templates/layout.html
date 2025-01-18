@@ -3,7 +3,10 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Ultimate Converter is a web application that allows you to convert files and web pages to different formats." />
+        <meta name="keywords" content="file converter, web converter, convert files, convert web pages" />
         <title>{% block title %}Ultimate Converter{% endblock %}</title>
+        <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='styles/media.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='styles/modal.css') }}" />
