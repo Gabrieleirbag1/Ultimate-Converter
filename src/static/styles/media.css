@@ -22,7 +22,7 @@
 @media only screen and (max-width: 768px) {
 
     .split-div {
-        height: 80vh;
+        height: 70vh;
         margin: 3vh 0;
         display: flex;
         align-items: center;
@@ -93,8 +93,13 @@
 
 /* ############################# STYLES FOR THE WEB / CONVERT PAGE ############################# */
 
+.container {
+    padding: 20px 0;
+}
+
 .card h3 {
     text-align: center;
+    font-size: 1.5em;
 }
 
 .drop-file-div {
@@ -125,6 +130,14 @@ select {
 
 .links-div {
     gap: 10px;
+}
+
+.download-div {
+    margin: 20px 0;
+}
+
+.download-div h1 {
+    font-size: 1.5em;
 }
 
 
