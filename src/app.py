@@ -107,9 +107,8 @@ def download_page(token):
         media = Media.query.filter_by(filename=download_token.filename).first()
         if media:
             file_size_mb = round(media.filesize / (1024 * 1024), 2)
-            format = get_format_category(media.filetype)
-
-            log(f" format: {format}", "DEBUG")
+            format = get_format_category(media.filetype.split(' (autotrace)')[0])
+            log(f" format: {format}, {media.filetype}, {media.filetype.split(' (autotrace)')[0]}", "DEBUG")
             return render_template('download.html', token=download_token.token, filename=media.filename, filesize=file_size_mb, filetype=media.filetype, format=format)
     flash('The download link has expired or is invalid.', "error")
     return redirect(url_for('home'))
