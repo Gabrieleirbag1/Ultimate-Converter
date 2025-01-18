@@ -100,7 +100,7 @@ def auto_remove_output_file():
 def home():
     return render_template('index.html')
 
-@app.route('/download_page/<token>')
+@app.route('/download_page/<token>/')
 def download_page(token):
     download_token = DownloadToken.query.filter_by(token=token).first()
     if download_token and download_token.expires_at > datetime.now():
@@ -113,7 +113,7 @@ def download_page(token):
     flash('The download link has expired or is invalid.', "error")
     return redirect(url_for('home'))
 
-@app.route('/download/<token>')
+@app.route('/download/<token>/')
 def download(token):
     download_token = DownloadToken.query.filter_by(token=token).first()
     if download_token and download_token.expires_at > datetime.now():
@@ -123,7 +123,7 @@ def download(token):
     flash('The download link has expired or is invalid.', "error")
     return redirect(url_for('home'))
 
-@app.route('/convert', methods=['GET', 'POST'])
+@app.route('/convert/', methods=['GET', 'POST'])
 def convert():
     if request.method == 'POST' and 'file' in request.files:
         file = request.files['file']
@@ -163,7 +163,7 @@ def convert():
             remove_uploaded_file(conversion.converter.input_file)
     return render_template('convert.html')
 
-@app.route('/web', methods=['GET', 'POST'])
+@app.route('/web/', methods=['GET', 'POST'])
 def web():
     log(f'Getting form {request.form}', "DEBUG")
     if request.method == 'POST' and 'url' in request.form:
@@ -194,10 +194,6 @@ def web():
             flash('An error occurred during the download. Please try again.', "error")
             return redirect(url_for('web'))
     return render_template('web.html')
-
-@app.route('/test')
-def test():
-    return render_template('test.html')
 
 def main():
     with app.app_context():
