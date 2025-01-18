@@ -119,7 +119,7 @@ class VectorConverter(BaseConverter):
         try:
             if self.type_input_file in IMAGE and not self.input_file.endswith('.png'):
                 self.convert_to_png()
-            subprocess.run(['docker', 'exec', '-it', 'inkscape', 'inkscape', self.input_file, '--export-type=' + self.type_output_file, '--export-filename=' + self.output_file], check=True)
+            subprocess.run(['docker', 'exec', 'inkscape', 'inkscape', self.input_file, '--export-type=' + self.type_output_file, '--export-filename=' + self.output_file], check=True)
             if self.original_type_output_file != self.type_output_file:
                 converter = ClassicConverter(self.output_file, self.original_type_output_file)
                 if not converter.convert():

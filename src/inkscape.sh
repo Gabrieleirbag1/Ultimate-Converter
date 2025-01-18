@@ -1,4 +1,6 @@
-#!bin/bash
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
 docker run -d \
   --name=inkscape \
@@ -8,6 +10,6 @@ docker run -d \
   -e TZ=Etc/UTC \
   -p 3000:3000 \
   -p 3001:3001 \
-  -v "$PWD:$PWD" -w "$PWD" \
+  -v "$SCRIPT_DIR:$SCRIPT_DIR" -w "$SCRIPT_DIR" \
   --restart unless-stopped \
   lscr.io/linuxserver/inkscape:latest
