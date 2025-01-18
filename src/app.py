@@ -19,7 +19,7 @@ app.config['UPLOADED_FILES_DEST'] = os.path.join(app.root_path, 'uploads')
 app.config['OUTPUT_FILES_DEST'] = os.path.join(app.root_path, 'output')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 # 1000 MB
 app.config['MAX_OUTPUT_FOLDER_SIZE'] = 20 * 1024 * 1024 * 1024  # 20 GB
-app.secret_key = 'supersecretkey'
+app.secret_key = os.urandom(24) 
 
 db.init_app(app)
 
@@ -204,7 +204,7 @@ def main():
     with app.app_context():
         db.create_all()
     start_scheduler()
-    app.run(debug=True)
 
 if __name__ == '__main__':
     main()
+    app.run(port=80, debug=False)
