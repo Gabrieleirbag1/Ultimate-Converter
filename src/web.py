@@ -298,7 +298,9 @@ class SpotifyDownloader:
     def download(self):
         self.check_spotify_type()
         self.create_unique_directory()
+        script_dir_name = os.path.dirname(os.path.realpath(__file__))
         command = [
+            'docker', 'run', '--rm', '-v', f"{script_dir_name}:{script_dir_name}", '-w', script_dir_name, 
             'spotdl',
             'download',
             self.url,
