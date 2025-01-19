@@ -61,8 +61,15 @@ def start_scheduler():
 
 def create_media(filename, filetype, filepath):
     log(f'Creating media: {filename}', "INFO")
-    media = Media(filename=filename, filetype=filetype, filepath=filepath, filesize=os.path.getsize(filepath))
-    db.session.add(media)
+    existing_media = Media.query.filter_by(filename=filename).first()
+    if existing_media:
+        log(f'Media with filename {filename} already exists. Updating existing entry.', "INFO")
+        existing_media.filetype = filetype
+        existing_media.filepath = filepath
+        existing_media.filesize = os.path.getsize(filepath)
+    else:
+        media = Media(filename=filename, filetype=filetype, filepath=filepath, filesize=os.path.getsize(filepath))
+        db.session.add(media)
     db.session.commit()
 
 def create_token(output_file) -> str:
