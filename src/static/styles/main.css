@@ -55,6 +55,13 @@ section {
   background-color: #fbfbfb;
 }
 
+.header-title-div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
 .header-main h1 {
   margin: 0;
   font-size: 2em;
@@ -67,7 +74,7 @@ section {
   font-size: 1.5em;
 }
 .header-main nav a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .footer-main {

@@ -8,7 +8,6 @@
 
     .header-main nav {
         display: flex;
-        flex-direction: column;
         align-items: center;
     }
 
@@ -94,7 +93,7 @@
 /* ############################# STYLES FOR THE WEB / CONVERT PAGE ############################# */
 
 .container {
-    padding: 20px 0;
+    padding: 10px 0;
 }
 
 .card h3 {
@@ -103,11 +102,19 @@
 }
 
 .drop-file-div {
-    gap: 40px;
+    gap: 10px;
+}
+
+.download-p, .drop-box-p{
+    font-size: 12px;
+}
+
+.file-preview-header h4 {
+    font-size: 1.2em;
 }
 
 .web-div {
-    gap: 10px;
+    gap: 5px;
 }
 
 #h4-filename {
