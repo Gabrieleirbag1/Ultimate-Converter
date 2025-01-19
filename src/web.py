@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
 from converter import ClassicConverter
+from yt_dlp import YoutubeDL
 
 class FileManager:
     def __init__(self, media_files: list[str], output_path: str, media_title: str):
@@ -39,6 +40,11 @@ class FileManager:
                     continue
                 self.remove_uploaded_file(file_path)
 
+import os
+import re
+import time
+from yt_dlp import YoutubeDL
+
 class YoutubeDownloader():
     def __init__(self, url, output_path, quality='highest', media='video', format='mp4'):
         super().__init__()
@@ -68,68 +74,51 @@ class YoutubeDownloader():
             self.final_file_name = converter.output_file
 
     def download_video(self):
-        yt = YouTube(self.url)
-        stream = self.set_stream(yt)
-        self.final_file_name = os.path.join(self.output_path, self.set_name(stream))
-        
-        log(f"Downloading {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
-        stream.download(self.output_path, filename=os.path.basename(self.final_file_name))
-        self.convert_file(stream.mime_type.split('/')[1])
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': os.path.join(self.output_path, f'%(title)s_{timestamp}.%(ext)s'),
+        }
+
+        with YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(self.url, download=True)
+            self.final_file_name = ydl.prepare_filename(info_dict)
+            yt_dl_extension = os.path.basename(self.final_file_name.rsplit('.', 1)[1])
+            self.final_file_name = self.final_file_name.replace("webm", yt_dl_extension)
+
+        self.convert_file(yt_dl_extension)
+        log(f"Downloaded {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
 
     def download_playlist(self):
-        playlist = Playlist(self.url)
-        try:
-            log(f"Downloading playlist: {playlist.title}", "INFO")
-            for video in playlist.videos:
-                self.url = video.watch_url
-                self.download_video()
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': os.path.join(self.output_path, f'%(playlist)s_{timestamp}/%(title)s.%(ext)s'),
+        }
+
+        with YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(self.url, download=True)
+            for entry in info_dict['entries']:
+                log(f"Downloading {entry['title']}", "INFO")
+                self.final_file_name = ydl.prepare_filename(entry)
+                yt_dl_extension = os.path.basename(self.final_file_name.rsplit('.', 1)[1])
+                log('File name: ' + self.final_file_name, "DEBUG")
+                self.final_file_name = self.final_file_name.replace("webm", yt_dl_extension)
+                log(f"Extension: {yt_dl_extension}", "DEBUG")
+                log(f"Final file name: {self.final_file_name}", "DEBUG")
+                self.convert_file(yt_dl_extension)
                 self.medias_list.append(self.final_file_name)
-            playlist_title = re.sub(r'[|:*?"<>\\/]', '_', playlist.title)
-            file_manager = FileManager(self.medias_list, self.output_path, playlist_title)
-            file_manager.make_archive()
-            self.final_file_name = file_manager.zip_final_filename
-        except KeyError as e:
-            log(f"Error downloading playlist: {e}", "ERROR")
-
-    def get_resolutions(self, yt: YouTube):
-        resolutions = []
-        for stream in yt.streams:
-            if stream.resolution and stream.resolution not in resolutions:
-                resolutions.append(stream.resolution)
-        resolutions.sort(key=lambda x: int(x.replace('p', '')))
-
-        return resolutions
-    
-    def set_stream(self, yt: YouTube):
-        resolutions = self.get_resolutions(yt)
+                log(self.medias_list, "DEBUG")
         
-        if self.media == 'video':
-            if self.quality == 'highest':
-                stream = yt.streams.get_highest_resolution()
-            else:
-                stream = yt.streams.filter(res=self.quality, file_extension=self.format).first()
-        elif self.media == 'audio':
-            stream = yt.streams.filter(only_audio=True).first()
+        playlist_title = re.sub(r'[|:*?"<>\\/]', '_', info_dict['title'])
+        file_manager = FileManager(self.medias_list, self.output_path, playlist_title)
+        file_manager.make_archive()
+        self.final_file_name = file_manager.zip_final_filename
+        playlist_dir = os.path.join(self.output_path, f"{playlist_title}_{timestamp}")
+        if os.path.exists(playlist_dir):
+            os.rmdir(playlist_dir)
+        log(f"Downloaded playlist: {info_dict['title']}", "INFO")
 
-        return stream
-    
-    def set_name(self, stream: Stream):
-        file_extension = stream.mime_type.split('/')[1]
-        file_name = stream.default_filename.replace("|", "_")
-        base_name, ext = os.path.splitext(file_name)
-        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
-        if str.isspace(base_name) or not base_name:
-            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        if len(base_name) > 50:
-            base_name = base_name[:50]
-        final_file_name = f"{base_name}{ext}"
-        while os.path.exists(os.path.join(self.output_path, final_file_name)):
-            log(os.path.join(self.output_path, final_file_name), "DEBUG")
-            random_number = random.randint(1000, 9999)
-            final_file_name = f"{base_name}_{random_number}{ext}"
-        
-        return final_file_name
-    
 class InstagramDownloader:
     def __init__(self, url, output_path, format='mp4'):
         self.url = url

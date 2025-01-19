@@ -13,7 +13,7 @@ class DownloadToken(db.Model):
 
 class Media(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(200), unique=True, nullable=False)
+    filename = db.Column(db.String(200), nullable=False)
     filetype = db.Column(db.String(50), nullable=False)
     filepath = db.Column(db.String(200), nullable=False)
     filesize = db.Column(db.Integer, nullable=False)
