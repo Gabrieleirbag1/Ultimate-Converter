@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['UPLOADED_FILES_DEST'] = os.path.join(app.root_path, 'uploads')
 app.config['OUTPUT_FILES_DEST'] = os.path.join(app.root_path, 'output')
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 # 1000 MB
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024 * 1024  # 1GB
 app.config['MAX_OUTPUT_FOLDER_SIZE'] = 20 * 1024 * 1024 * 1024  # 20 GB
 app.secret_key = os.urandom(24) 
 
