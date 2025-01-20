@@ -6,6 +6,7 @@
 {% block scripts %} 
     <script src="/static/scripts/utils.js"></script>
     <script src="/static/scripts/convert.js"></script>
+    <script src="/static/scripts/loading.js"></script>
     <script src="/static/scripts/fixing-size.js"></script>
 {% endblock %}
 
@@ -51,7 +52,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <button class="btn" type="submit">Convert</button>
+                                    <button id="submit-button" class="btn" type="submit" onclick="setLoadingImage();">Convert</button>
+                                    <img id="loading-img" src="/static/images/loading.png" alt="loading" style="display: none;">
                                 </div>
                             </div>
                             

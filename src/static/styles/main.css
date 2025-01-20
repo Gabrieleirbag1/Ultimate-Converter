@@ -341,6 +341,11 @@ select {
   cursor: pointer;
 }
 
+#loading-img {
+  width: 60px;
+  height: 60px;
+}
+
 /* ############################# STYLES FOR WEB ############################# */
 
 .download-form input {
