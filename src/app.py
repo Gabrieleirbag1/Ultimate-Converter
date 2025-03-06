@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, Response
 from flask_uploads import UploadSet, UploadNotAllowed, configure_uploads, ALL
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
@@ -26,19 +26,37 @@ db.init_app(app)
 files = UploadSet('files', ALL)
 configure_uploads(app, files)
 
-def get_format_category(extension):
+def get_format_category(extension: str) -> str | None:
+    """This function returns the category of the format based on the extension.
+    
+    :param str extension: The extension of the file.
+    
+    :return: The category of the format.
+    :rtype: str | None"""
     for category, extensions in FORMATS.items():
         if extension in extensions:
             return category
     return None
 
-def get_full_extension(filename):
+def get_full_extension(filename: str) -> str | None:
+    """This function returns the full extension of the file.
+    
+    :param str filename: The name of the file.
+    
+    :return: The full extension of the file.
+    :rtype: str | None"""
     for ext in ALLOWED_EXTENSIONS:
         if filename.lower().endswith(ext):
             return ext
     return None
 
 def get_folder_size(folder: str) -> int:
+    """This function returns the total size of the folder.
+    
+    :param str folder: The path to the folder.
+    
+    :return: The total size of the folder.
+    :rtype: int"""
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(folder):
         for f in filenames:
@@ -47,6 +65,12 @@ def get_folder_size(folder: str) -> int:
     return total_size
 
 def check_size(file_size: int) -> bool:
+    """This function checks if the total size of the output folder exceeds the maximum allowed size.
+    
+    :param int file_size: The size of the file to be added to the output folder.
+    
+    :return: True if the total size of the output folder does not exceed the maximum allowed size, False otherwise.
+    :rtype: bool"""
     output_folder_size = get_folder_size(app.config['OUTPUT_FILES_DEST'])
     max_size = app.config['MAX_OUTPUT_FOLDER_SIZE']
     if output_folder_size + file_size > max_size:
@@ -54,12 +78,18 @@ def check_size(file_size: int) -> bool:
     return True
 
 def start_scheduler():
+    """This function starts the scheduler to remove expired files."""
     scheduler = BackgroundScheduler()
     if not scheduler.running:
         scheduler.add_job(func=auto_remove_output_file, trigger="interval", minutes=5)
         scheduler.start()
 
-def create_media(filename, filetype, filepath):
+def create_media(filename: str, filetype: str, filepath: str):
+    """This function creates a new media entry in the database.
+    
+    :param str filename: The name of the file.
+    :param str filetype: The type of the file.
+    :param str filepath: The path to the file."""
     log(f'Creating media: {filename}', "INFO")
     existing_media = Media.query.filter_by(filename=filename).first()
     if existing_media:
@@ -72,7 +102,13 @@ def create_media(filename, filetype, filepath):
         db.session.add(media)
     db.session.commit()
 
-def create_token(output_file) -> str:
+def create_token(output_file: str) -> str:
+    """This function creates a download token for the output file.
+    
+    :param str output_file: The path to the output file.
+    
+    :return: The download token.
+    :rtype: str"""
     token = str(uuid4())
     expires_at = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
     media = Media.query.filter_by(filepath=output_file).first()
@@ -81,11 +117,15 @@ def create_token(output_file) -> str:
     db.session.commit()
     return token
 
-def remove_uploaded_file(filepath):
+def remove_uploaded_file(filepath: str):
+    """This function removes the uploaded file.
+
+    :param str filepath: The path to the uploaded file."""
     if os.path.exists(filepath):
         os.remove(filepath)
 
 def auto_remove_output_file():
+    """This function removes expired files from the output folder."""
     # Run twice when debug mode is on
     with app.app_context():
         expired_tokens = DownloadToken.query.filter(DownloadToken.expires_at < datetime.now()).all()
@@ -104,11 +144,22 @@ def auto_remove_output_file():
         db.session.commit()
 
 @app.route('/')
-def home():
+def home() -> Response:
+    """This function renders the home page.
+    
+    :return: The home page.
+    :rtype: Response"""
     return render_template('index.html')
 
 @app.route('/download_page/<token>/')
-def download_page(token):
+def download_page(token: str) -> Response:
+    """This function renders the download page.
+    
+    :param str token: The download token.
+    
+    :return: The download page.
+    :rtype: Response
+    """
     download_token = DownloadToken.query.filter_by(token=token).first()
     if download_token and download_token.expires_at > datetime.now():
         media = Media.query.filter_by(filename=download_token.filename).first()
@@ -121,7 +172,13 @@ def download_page(token):
     return redirect(url_for('home'))
 
 @app.route('/download/<token>/')
-def download(token):
+def download(token: str) -> Response:
+    """This function downloads the file.
+    
+    :param str token: The download token.
+    
+    :return: The file to download.
+    :rtype: Response"""
     download_token = DownloadToken.query.filter_by(token=token).first()
     if download_token and download_token.expires_at > datetime.now():
         media = Media.query.filter_by(filename=download_token.filename).first()
@@ -131,7 +188,14 @@ def download(token):
     return redirect(url_for('home'))
 
 @app.route('/convert/', methods=['GET', 'POST'])
-def convert():
+def convert() -> Response:
+    """This function converts the uploaded file to the desired format.
+    
+    :return: The convert page or the download page.
+    :rtype: Response
+    
+    :raises UploadNotAllowed: If the file type is not allowed.
+    :raises ConvertError: If an error occurs during the conversion."""
     if request.method == 'POST' and 'file' in request.files:
         file = request.files['file']
         file_size = len(file.read())
@@ -171,7 +235,11 @@ def convert():
     return render_template('convert.html')
 
 @app.route('/web/', methods=['GET', 'POST'])
-def web():
+def web() -> Response:
+    """This function downloads the file from the web.
+    
+    :return: The web page or the download page.
+    :rtype: Response"""
     log(f'Getting form {request.form}', "DEBUG")
     if request.method == 'POST' and 'url' in request.form:
         url = request.form['url']
@@ -203,6 +271,7 @@ def web():
     return render_template('web.html')
 
 def main():
+    """This function initializes the database and starts the scheduler."""
     with app.app_context():
         db.create_all()
     start_scheduler()

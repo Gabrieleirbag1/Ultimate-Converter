@@ -1,6 +1,7 @@
 from db import db
 
 class DownloadToken(db.Model):
+    """Model for download tokens."""
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(36), unique=True, nullable=False)
     filename = db.Column(db.String(200), db.ForeignKey('media.filename'), nullable=False)
@@ -12,6 +13,7 @@ class DownloadToken(db.Model):
         return f'<DownloadToken {self.token}>'
 
 class Media(db.Model):
+    """Model for media files."""
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(200), unique=True, nullable=False)
     filetype = db.Column(db.String(50), nullable=False)
@@ -19,4 +21,5 @@ class Media(db.Model):
     filesize = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
+        """Return a human-readable representation of the model instance."""
         return f'<Media {self.filename}>'

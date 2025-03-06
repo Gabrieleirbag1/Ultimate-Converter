@@ -1,6 +1,5 @@
-from pytubefix import YouTube, Stream, Playlist
 from instaloader import Post, Instaloader
-import random, os, re, sys, requests, subprocess, string, zipfile, uuid
+import random, os, re, sys, requests, subprocess, string, zipfile, uuid, time
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
@@ -8,7 +7,20 @@ from converter import ClassicConverter
 from yt_dlp import YoutubeDL
 
 class FileManager:
+    """Class to manage the files downloaded from the web
+
+    :param list[str] media_files: List of media files to archive
+    :param str output_path: Path to save the archive
+    :param str media_title: Title of the media files
+    :param str zip_final_filename: Final name of the zip file
+    """    
     def __init__(self, media_files: list[str], output_path: str, media_title: str):
+        """Initialize the FileManager class
+        
+        :param list[str] media_files: List of media files to archive
+        :param str output_path: Path to save the archive
+        :param str media_title: Title of the media files
+        """
         self.media_files = media_files
         self.output_path = output_path
         self.media_title = media_title
@@ -16,6 +28,7 @@ class FileManager:
         self.zip_final_filename: str
 
     def get_unique_output_file(self):
+        """Get a unique name for the output zip file"""
         zip_final_filename = os.path.join(self.output_path, f"{self.media_title}.zip")
         while os.path.exists(zip_final_filename):
             random_number = random.randint(1, 10000)
@@ -23,12 +36,16 @@ class FileManager:
         self.zip_final_filename = zip_final_filename
 
     def remove_uploaded_file(self, file_path: str):
+        """Remove the uploaded file after archiving
+        
+        :param str file_path: Path to the file to remove"""
         try:
             os.remove(file_path)
         except FileNotFoundError:
             pass
 
     def make_archive(self):
+        """Create a zip archive of the media files"""
         self.get_unique_output_file()
         with zipfile.ZipFile(self.zip_final_filename, 'w') as zipf:
             for file in self.media_files:
@@ -40,13 +57,27 @@ class FileManager:
                     continue
                 self.remove_uploaded_file(file_path)
 
-import os
-import re
-import time
-from yt_dlp import YoutubeDL
-
 class YoutubeDownloader():
-    def __init__(self, url, output_path, quality='highest', media='video', format='mp4'):
+    """Class to download youtube videos and playlists
+    
+    :param str url: URL of the youtube video or playlist
+    :param str output_path: Path to save the downloaded media
+    :param str quality: Quality of the video
+    :param str media: Type of media to download
+    :param str format: Format to convert the media to
+    :param str final_file_name: Final name of the downloaded file
+    :param list[str] medias_list: List of media files downloaded in a playlist
+    """
+    def __init__(self, url: str, output_path: str, quality: str ='highest', media: str ='video', format: str ='mp4') -> None:
+        """Initialize the YoutubeDownloader class
+        
+        :param str url: URL of the youtube video or playlist
+        :param str output_path: Path to save the downloaded media
+        :param str quality: Quality of the video
+        :param str media: Type of media to download
+        :param str format: Format to convert the media to
+        
+        :return: None"""
         super().__init__()
         self.url = url
         self.output_path = output_path
@@ -58,12 +89,16 @@ class YoutubeDownloader():
         self.medias_list: list[str] = []
 
     def download(self):
+        """Download the youtube video or playlist"""
         if 'playlist' in self.url:
             self.download_playlist()
         else:
             self.download_video()
 
-    def convert_file(self, extension):
+    def convert_file(self, extension: str):
+        """Convert the downloaded file to a different format
+
+        :param str extension: Extension of the downloaded file"""
         file_path = os.path.join(self.output_path, self.final_file_name)
         if self.format != extension:
             converter = ClassicConverter(file_path, self.format)
@@ -74,6 +109,7 @@ class YoutubeDownloader():
             self.final_file_name = converter.output_file
 
     def download_video(self):
+        """Download a single youtube video"""
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         ydl_opts = {
             'format': 'bestvideo+bestaudio/best',
@@ -90,6 +126,7 @@ class YoutubeDownloader():
         log(f"Downloaded {self.final_file_name} in {self.media} media with {self.quality} quality", "INFO")
 
     def download_playlist(self):
+        """Download a youtube playlist"""
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         ydl_opts = {
             'format': 'bestvideo+bestaudio/best',
@@ -120,7 +157,22 @@ class YoutubeDownloader():
         log(f"Downloaded playlist: {info_dict['title']}", "INFO")
 
 class InstagramDownloader:
-    def __init__(self, url, output_path, format='mp4'):
+    """Class to download instagram posts
+    
+    :param str url: URL of the instagram post
+    :param str output_path: Path to save the downloaded media
+    :param str format: Format to convert the media to
+    :param str final_file_name: Final name of the downloaded file
+    :param list[str] medias_list: List of media files downloaded in a playlist
+    """
+    def __init__(self, url: str, output_path: str, format: str ='mp4') -> None:
+        """Initialize the InstagramDownloader class
+        
+        :param str url: URL of the instagram post
+        :param str output_path: Path to save the downloaded media
+        :param str format: Format to convert the media to
+        
+        :return: None"""
         self.url = url
         self.output_path = output_path
         self.format = format
@@ -130,13 +182,17 @@ class InstagramDownloader:
         self.medias_list: list[str] = []
 
     def download(self):
+        """Download the instagram post"""
         post = Post.from_shortcode(self.loader.context, self.url.split('/')[-2])
         if post.is_video:
             self.download_video(post)
         else:
             self.download_image(post)
         
-    def convert_file(self, extension):
+    def convert_file(self, extension: str):
+        """Convert the downloaded file to a different format
+        
+        :param str extension: Extension of the downloaded file"""
         if self.format != extension:
             converter = ClassicConverter(self.final_file_name, self.format)
             if not converter.convert():
@@ -145,7 +201,10 @@ class InstagramDownloader:
                 os.remove(self.final_file_name)
             self.final_file_name = converter.output_file
 
-    def download_video(self, post):
+    def download_video(self, post: str):
+        """Download the video from the instagram post
+        
+        :param Post post: The instagram post object"""
         if self.format not in ['mp4', 'webm']:
             log(f"Format {self.format} not supported for videos. Defaulting to mp4.", "WARNING")
             extension = 'mp4'
@@ -154,7 +213,10 @@ class InstagramDownloader:
         video_url = post.video_url
         self.download_file(video_url, post, extension)
 
-    def download_image(self, post):
+    def download_image(self, post: Post):
+        """Download the image from the instagram post
+        
+        :param Post post: The instagram post object"""
         if self.format not in ['jpg', 'png']:
             log(f"Format {self.format} not supported for images. Defaulting to jpg.", "WARNING")
             extension = 'jpg'
@@ -163,7 +225,11 @@ class InstagramDownloader:
         image_url = post.url
         self.download_file(image_url, post, extension)
 
-    def generate_file_name(self, file_name, extension):
+    def generate_file_name(self, file_name: str, extension: str):
+        """Generate a unique file name for the downloaded media
+        
+        :param str file_name: Name of the media file
+        :param str extension: Extension of the media file"""
         base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
         log(f"Base name: {base_name}", "DEBUG")
         if str.isspace(base_name) or not base_name:
@@ -172,14 +238,26 @@ class InstagramDownloader:
             base_name = base_name[:50]
         self.final_file_name = self.get_unique_output_file(base_name, extension)
 
-    def download_file(self, file_url, post, extension):
+    def download_file(self, file_url: str, post: Post, extension: str):
+        """Download the media file from the URL
+        
+        :param str file_url: URL of the media file
+        :param Post post: The instagram post object
+        :param str extension: Extension of the media file"""
         file_name = post.shortcode
         self.generate_file_name(file_name, extension)
         log(f"Downloading {self.final_file_name} from {file_url}", "INFO")
         self.loader.download_pic(self.final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
         self.convert_file(extension)
 
-    def get_unique_output_file(self, base_name, extension):
+    def get_unique_output_file(self, base_name: str, extension: str) -> str:
+        """Get a unique name for the output file
+        
+        :param str base_name: Base name of the file
+        :param str extension: Extension of the file
+        
+        :return: Unique name for the output file
+        :rtype: str"""
         output_file = os.path.join(self.output_path, f'{base_name}_converted.{extension}')
         while os.path.exists(output_file):
             random_number = random.randint(1, 10000)
@@ -187,7 +265,22 @@ class InstagramDownloader:
         return output_file
 
 class TwitterDownloader:
-    def __init__(self, url, output_path, format="mp4"):
+    """Class to download twitter videos
+    
+    :param str url: URL of the twitter post
+    :param str output_path: Path to save the downloaded media
+    :param str format: Format to convert the media to
+    :param str final_file_name: Final name of the downloaded file
+    :param list[str] medias_list: List of media files downloaded in a playlist
+    """
+    def __init__(self, url: str, output_path: str, format: str = "mp4") -> None:
+        """Initialize the TwitterDownloader class
+        
+        :param str url: URL of the twitter post
+        :param str output_path: Path to save the downloaded media
+        :param str format: Format to convert the media to
+        
+        :return: None"""
         self.url = url
         self.output_path = output_path
         self.format = format
@@ -196,12 +289,7 @@ class TwitterDownloader:
         self.medias_list: list[str] = []
 
     def download(self):
-        """Extract the highest quality video url to download into a file
-
-        Args:
-            url (str): The twitter post URL to download from
-        """
-
+        """Extract the highest quality video url to download into a file"""
         api_url = f"https://twitsave.com/info?url={self.url}"
 
         response = requests.get(api_url)
@@ -213,7 +301,10 @@ class TwitterDownloader:
         self.generate_file_name(data)
         self.download_video(highest_quality_url, self.final_file_name)
 
-    def convert_file(self, extension):
+    def convert_file(self, extension: str):
+        """Convert the downloaded file to a different format
+        
+        :param str extension: Extension of the downloaded file"""
         if self.format != extension:
             converter = ClassicConverter(self.final_file_name, self.format)
             if not converter.convert():
@@ -222,19 +313,25 @@ class TwitterDownloader:
                 os.remove(self.final_file_name)
             self.final_file_name = converter.output_file
 
-    def get_unique_output_file(self, base_name, extension):
+    def get_unique_output_file(self, base_name: str, extension: str) -> str:
+        """Get a unique name for the output file
+        
+        :param str base_name: Base name of the file
+        :param str extension: Extension of the file
+        
+        :return: Unique name for the output file
+        :rtype: str"""
         output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
         while os.path.exists(output_file):
             random_number = random.randint(1, 10000)
             output_file = os.path.join(self.output_path, f'{base_name}_{random_number}.{extension}')
         return output_file
 
-    def download_video(self, url, file_name) -> None:
+    def download_video(self, url: str, file_name: str):
         """Download a video from a URL into a filename.
 
-        Args:
-            url (str): The video URL to download
-            file_name (str): The file name or path to save the video to.
+        :param str url: URL of the video
+        :param str file_name: Name of the file
         """
         response = requests.get(url, stream=True)
         total_size = int(response.headers.get("content-length", 0))
@@ -252,7 +349,10 @@ class TwitterDownloader:
         log(f"Downloaded {file_name} from {url}", "INFO")
         self.convert_file("mp4")
 
-    def generate_file_name(self, data):
+    def generate_file_name(self, data: str):
+        """Generate a unique file name for the downloaded media
+        
+        :param str data: Data from the twitter post"""
         file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
         file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + f".{self.format}"  # Remove special characters from file name
         base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
@@ -264,6 +364,7 @@ class TwitterDownloader:
         self.final_file_name = self.get_unique_output_file(base_name, "mp4")
 
     def check_url_website(self):
+        """Check if the URL is a valid Twitter video URL"""
         if len(sys.argv) < 2:
             log("Please provide the Twitter video URL as a command line argument.\nEg: python twitter_downloader.py <URL>", "ERROR")
         else:
