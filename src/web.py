@@ -397,10 +397,14 @@ class SpotifyDownloader:
             '--output', self.unique_dir,
         ]
         try:
-            result = subprocess.run(command, check=True, capture_output=True, text=True)
+            # Use bytes mode instead of text mode to avoid encoding issues
+            result = subprocess.run(command, check=True, capture_output=True, text=False)
             log(f"Downloaded successfully to {self.unique_dir}", "INFO")
-            output = result.stdout
+            
+            # Safely decode output with error handling
+            output = result.stdout.decode('utf-8', errors='replace')
             log(output, "DEBUG")
+            
             if self.type == 'track':
                 self.set_final_file_name_for_track()
                 self.convert_file(self.final_file_name, "mp3")
@@ -410,6 +414,9 @@ class SpotifyDownloader:
                 self.remove_unique_directory()
         except subprocess.CalledProcessError as e:
             log(f"Error during download: {e}", "ERROR")
+            # Safely decode stderr with error handling
+            stderr_output = e.stderr.decode('utf-8', errors='replace') if e.stderr else "No stderr output"
+            log(f"Error output: {stderr_output}", "ERROR")
 
     def convert_file(self, file_path, extension):
         if self.format != extension:
@@ -453,6 +460,20 @@ class SpotifyDownloader:
     def set_medias_list_for_album_or_playlist(self, output):
         self.medias_list = []
         for file in os.listdir(self.unique_dir):
+            # Clean the filename before processing
+            clean_file = file
+            try:
+                # Test if the filename can be properly encoded
+                clean_file.encode('utf-8')
+            except UnicodeEncodeError:
+                # Replace problematic characters in the filename
+                clean_file = ''.join(c if ord(c) < 0xD800 or ord(c) > 0xDFFF else '_' for c in file)
+                old_path = os.path.join(self.unique_dir, file)
+                new_path = os.path.join(self.unique_dir, clean_file)
+                os.rename(old_path, new_path)
+                log(f"Renamed file with problematic characters: {file} -> {clean_file}", "WARNING")
+                file = clean_file
+            
             file_path = os.path.join(self.unique_dir, file)
             converted_file_path = self.convert_file(file_path, "mp3")
             self.medias_list.append(converted_file_path)
@@ -460,6 +481,8 @@ class SpotifyDownloader:
         title_match = re.search(r'Found \d+ songs in (.*?) \(', output)
         if title_match:
             self.media_title = title_match.group(1)
+            # Clean media title of any problematic characters
+            self.media_title = ''.join(c if ord(c) < 0xD800 or ord(c) > 0xDFFF else '_' for c in self.media_title)
         else:
             log("Could not determine the album/playlist title from the output.", "ERROR")
             if self.medias_list:
@@ -468,10 +491,37 @@ class SpotifyDownloader:
                 log("No files found in the download directory.", "ERROR")
 
     def create_zip_for_album_or_playlist(self):
-        media_title = re.sub(r'[|:*?"<>\\/]', '_', self.media_title)
-        file_manager = FileManager(self.medias_list, self.output_path, media_title)
-        file_manager.make_archive()
-        self.final_file_name = file_manager.zip_final_filename
+        # Clean media title of special characters and surrogate pairs
+        media_title = ''.join(c if ord(c) < 0xD800 or ord(c) > 0xDFFF else '_' for c in self.media_title)
+        media_title = re.sub(r'[|:*?"<>\\/]', '_', media_title)
+        
+        try:
+            file_manager = FileManager(self.medias_list, self.output_path, media_title)
+            file_manager.make_archive()
+            self.final_file_name = file_manager.zip_final_filename
+        except UnicodeEncodeError as e:
+            log(f"Unicode error during zip creation: {e}", "ERROR")
+            # Create a clean list with safe filenames
+            clean_medias_list = []
+            for file_path in self.medias_list:
+                try:
+                    # Test if the path can be properly encoded
+                    file_path.encode('utf-8')
+                    clean_medias_list.append(file_path)
+                except UnicodeEncodeError:
+                    # Create a clean copy with a safe name
+                    dir_name = os.path.dirname(file_path)
+                    base_name = os.path.basename(file_path)
+                    clean_name = ''.join(c if ord(c) < 0xD800 or ord(c) > 0xDFFF else '_' for c in base_name)
+                    new_path = os.path.join(dir_name, clean_name)
+                    os.rename(file_path, new_path)
+                    clean_medias_list.append(new_path)
+                    log(f"Renamed file for zip: {base_name} -> {clean_name}", "WARNING")
+            
+            # Try again with clean list
+            file_manager = FileManager(clean_medias_list, self.output_path, media_title)
+            file_manager.make_archive()
+            self.final_file_name = file_manager.zip_final_filename
 
 class WebDownloader:
     def __init__(self, url, format):
