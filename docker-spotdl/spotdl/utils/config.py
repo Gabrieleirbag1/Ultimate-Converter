@@ -293,8 +293,8 @@ class GlobalConfig:
 
 
 SPOTIFY_OPTIONS: SpotifyOptions = {
-    "client_id": "5f573c9620494bae87890c0f08a60293",
-    "client_secret": "212476d9b0f3472eaa762d90b19b0ba8",
+    "client_id": "46e015f54bc2492298a1e4929c863dea",
+    "client_secret": "05be445733984c1086d132232a0e472d",
     "auth_token": None,
     "user_auth": False,
     "headless": False,

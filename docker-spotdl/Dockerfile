@@ -27,5 +27,8 @@ RUN mkdir /music
 # Change CWD to /music
 WORKDIR /music
 
+ENV SPOTIPY_CLIENT_ID=""
+ENV SPOTIPY_CLIENT_SECRET=""
+
 # Entrypoint command
 ENTRYPOINT ["poetry", "run", "spotdl"]

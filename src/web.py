@@ -379,23 +379,28 @@ class SpotifyDownloader:
         self.url = url
         self.output_path = output_path
         self.format = format
-
         self.final_file_name: str = ""
         self.medias_list: list[str] = []
         self.media_title: str = ""
         self.unique_dir: str = ""
+        self.bitrate = "320k"
 
     def download(self):
         self.check_spotify_type()
         self.create_unique_directory()
         script_dir_name = os.path.dirname(os.path.realpath(__file__))
         command = [
-            'docker', 'run', '--rm', '-v', f"{script_dir_name}:{script_dir_name}", '-w', script_dir_name, 
+            'docker', 'run', '--rm', 
+            '-v', f"{script_dir_name}:{script_dir_name}", 
+            '-w', script_dir_name, 
             'spotdl',
             'download',
             self.url,
             '--output', self.unique_dir,
+            '--bitrate', self.bitrate,
+            '--format', 'mp3'
         ]
+        
         try:
             # Use bytes mode instead of text mode to avoid encoding issues
             result = subprocess.run(command, check=True, capture_output=True, text=False)
