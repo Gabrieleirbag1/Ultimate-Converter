@@ -250,7 +250,12 @@ def web() -> Response:
         if web.setup_download():
             filename = os.path.basename(web.filename)
             filepath = web.filename
-            file_size = os.path.getsize(filepath)
+            try:
+                file_size = os.path.getsize(filepath)
+            except FileNotFoundError:
+                flash('The file could not be downloaded. Please check the URL and try again.', "error")
+                log(f"File not found: {filepath}, cannot get its size", "ERROR")
+                return redirect(url_for('web'))
             
             if not check_size(file_size):
                 flash('The total size of the output folder exceeds the maximum allowed size.', "error")
