@@ -84,21 +84,40 @@ def start_scheduler():
         scheduler.add_job(func=auto_remove_output_file, trigger="interval", minutes=5)
         scheduler.start()
 
+def sanitize_filename(filename):
+    """Sanitize filename to ensure it can be safely stored in the database.
+    
+    :param str filename: The filename to sanitize.
+    :return: A sanitized filename suitable for database storage.
+    :rtype: str
+    """
+    # Replace any surrogate pairs with replacement character
+    try:
+        # Test if it can be properly encoded
+        filename.encode('utf-8')
+        return filename
+    except UnicodeEncodeError:
+        # Replace problematic characters
+        return ''.join(c if ord(c) < 0xD800 or ord(c) > 0xDFFF else '_' for c in filename)
+
 def create_media(filename: str, filetype: str, filepath: str):
     """This function creates a new media entry in the database.
     
     :param str filename: The name of the file.
     :param str filetype: The type of the file.
     :param str filepath: The path to the file."""
-    log(f'Creating media: {filename}', "INFO")
-    existing_media = Media.query.filter_by(filename=filename).first()
+    # Sanitize the filename before database operations
+    safe_filename = sanitize_filename(filename)
+    log(f'Creating media: {safe_filename}', "INFO")
+    
+    existing_media = Media.query.filter_by(filename=safe_filename).first()
     if existing_media:
-        log(f'Media with filename {filename} already exists. Updating existing entry.', "INFO")
+        log(f'Media with filename {safe_filename} already exists. Updating existing entry.', "INFO")
         existing_media.filetype = filetype
         existing_media.filepath = filepath
         existing_media.filesize = os.path.getsize(filepath)
     else:
-        media = Media(filename=filename, filetype=filetype, filepath=filepath, filesize=os.path.getsize(filepath))
+        media = Media(filename=safe_filename, filetype=filetype, filepath=filepath, filesize=os.path.getsize(filepath))
         db.session.add(media)
     db.session.commit()
 
@@ -110,8 +129,12 @@ def create_token(output_file: str) -> str:
     :return: The download token.
     :rtype: str"""
     token = str(uuid4())
-    expires_at = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
-    media = Media.query.filter_by(filepath=output_file).first()
+    expires_at = datetime.now() + timedelta(hours=1)
+    
+    filename = os.path.basename(output_file)
+    safe_filename = sanitize_filename(filename)
+    
+    media = Media.query.filter_by(filename=safe_filename).first()
     download_token = DownloadToken(token=token, filename=media.filename, expires_at=expires_at)
     db.session.add(download_token)
     db.session.commit()
@@ -248,8 +271,22 @@ def web() -> Response:
         web = WebDownloader(url, filetype)
         
         if web.setup_download():
-            filename = os.path.basename(web.filename)
-            filepath = web.filename
+            original_filename = os.path.basename(web.filename)
+            safe_filename = sanitize_filename(original_filename)
+            
+            if safe_filename != original_filename:
+                original_path = web.filename
+                new_path = os.path.join(os.path.dirname(original_path), safe_filename)
+                try:
+                    os.rename(original_path, new_path)
+                    filepath = new_path
+                    log(f"Renamed file: {original_filename} → {safe_filename}", "INFO")
+                except OSError as e:
+                    log(f"Error renaming file: {str(e)}", "ERROR")
+                    filepath = original_path
+            else:
+                filepath = web.filename
+                
             try:
                 file_size = os.path.getsize(filepath)
             except FileNotFoundError:
@@ -259,12 +296,12 @@ def web() -> Response:
             
             if not check_size(file_size):
                 flash('The total size of the output folder exceeds the maximum allowed size.', "error")
-                os.remove(filepath)  # Remove the downloaded file
+                os.remove(filepath)
                 return redirect(url_for('web'))
 
             filetype = os.path.basename(filetype)
             if os.path.exists(filepath):
-                create_media(filename, filetype, filepath)
+                create_media(safe_filename, filetype, filepath)
                 token = create_token(filepath)
             else:
                 flash('An error occurred during the conversion', "error")
