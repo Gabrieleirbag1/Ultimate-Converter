@@ -21,6 +21,10 @@ ADD . .
 # Install spotdl itself
 RUN poetry install
 
+# In the docker-spotdl directory
+RUN poetry update spotdl ytmusicapi yt-dlp
+# RUN pip install --upgrade spotdl ytmusicapi
+
 # Create music directory
 RUN mkdir /music
 
