@@ -1,38 +1,9 @@
-FROM python:3.12-slim
+FROM python:3.12.3-bullseye
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt update -qq
 
-# Install Poetry
-RUN pip install poetry
+RUN apt install ffmpeg -y
 
-# Copy requirements files
-COPY poetry.lock pyproject.toml /
+RUN pip install spotdl
 
-# Install spotdl requirements
-RUN poetry install --no-root
-
-# Add source code files to WORKDIR
-ADD . .
-
-# Install spotdl itself
-RUN poetry install
-
-# In the docker-spotdl directory
-RUN poetry update spotdl ytmusicapi yt-dlp
-# RUN pip install --upgrade spotdl ytmusicapi
-
-# Create music directory
-RUN mkdir /music
-
-# Change CWD to /music
-WORKDIR /music
-
-ENV SPOTIPY_CLIENT_ID=""
-ENV SPOTIPY_CLIENT_SECRET=""
-
-# Entrypoint command
-ENTRYPOINT ["poetry", "run", "spotdl"]
+ENTRYPOINT ["spotdl"]
