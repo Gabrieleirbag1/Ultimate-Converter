@@ -28,3 +28,6 @@ FORMATS = {
     'vector': tuple(VECTOR) + tuple(AUTOTRACE_VECTOR.keys()),
     'archive': ARCHIVE
 }
+
+CLIENT_ID = ''
+CLIENT_SECRET = ''

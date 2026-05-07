@@ -5,6 +5,7 @@ from tqdm import tqdm
 from logs import log
 from converter import ClassicConverter
 from yt_dlp import YoutubeDL
+from utils import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
 
 class FileManager:
     """Class to manage the files downloaded from the web
@@ -410,7 +411,9 @@ class SpotifyDownloader:
             self.url,
             '--output', self.unique_dir,
             '--bitrate', self.bitrate,
-            '--format', 'mp3'
+            '--format', 'mp3',
+            '--client-id', SPOTIFY_CLIENT_ID,
+            '--client-secret', SPOTIFY_CLIENT_SECRET
         ]
         
         try:
