@@ -200,6 +200,7 @@ class VectorConverter(BaseConverter):
                     log(f'Error converting file: {self.output_file}', "ERROR")
                     return False
                 self.output_file = converter.output_file
+                self.output_file_name = converter.output_file_name
             return True
         except subprocess.CalledProcessError as e:
             log(f'Error during subprocess execution: {e}', "ERROR")

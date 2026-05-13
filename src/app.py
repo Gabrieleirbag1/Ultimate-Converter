@@ -10,7 +10,7 @@ from utils import ALLOWED_EXTENSIONS, FORMATS
 from converter import ManageConversion
 from models import Media, DownloadToken
 from logs import log
-from exception import ConvertError
+from exception import ConvertError, DbError
 from web import WebDownloader
 
 app = Flask(__name__)
@@ -135,6 +135,11 @@ def create_token(output_file: str) -> str:
     safe_filename = sanitize_filename(filename)
     
     media = Media.query.filter_by(filename=safe_filename).first()
+
+    if not media:
+        log(f"Media {safe_filename} was not found in db.", level="CRITICAL")
+        raise DbError(f"Media {safe_filename} was not found in db.")
+
     download_token = DownloadToken(token=token, filename=media.filename, expires_at=expires_at)
     db.session.add(download_token)
     db.session.commit()
