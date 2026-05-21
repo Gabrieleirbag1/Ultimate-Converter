@@ -307,12 +307,24 @@ class TwitterDownloader:
 
         response = requests.get(api_url)
         data = BeautifulSoup(response.text, "html.parser")
-        download_button = data.find_all("div", class_="origin-top-right")[0]
-        quality_buttons = download_button.find_all("a")
-        highest_quality_url = quality_buttons[0].get("href")  # Highest quality video url
+        
+        try:
+            download_button = data.find_all("div", class_="origin-top-right")[0]
+            quality_buttons = download_button.find_all("a")
+            highest_quality_url = quality_buttons[0].get("href")  # Highest quality video url
+        except (IndexError, AttributeError):
+            #try download gif
+            self.download_gif()
+            return
 
         self.generate_file_name(data)
         self.download_video(highest_quality_url, self.final_file_name)
+
+    def download_gif(self):
+        web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format)
+        web_dl.download()
+        self.final_file_name = web_dl.final_file_name
+        self.medias_list = web_dl.medias_list
 
     def convert_file(self, extension: str):
         """Convert the downloaded file to a different format

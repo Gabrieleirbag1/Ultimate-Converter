@@ -56,7 +56,7 @@ function handleFileUpload() {
     }
 
     else if (media == "Twitter"){
-        types = ["Video", "Audio"]
+        types = ["Video", "Audio", "Image"]
     }
 
     else if (media == "Spotify"){
