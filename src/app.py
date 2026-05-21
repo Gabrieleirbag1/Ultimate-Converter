@@ -272,8 +272,10 @@ def web() -> Response:
     if request.method == 'POST' and 'url' in request.form:
         url = request.form['url']
         filetype = request.form['file-format']
+        resolution = request.form.get('resolution', 'best')
+        codec = request.form.get('codec', 'best')
         log(f"File format web {filetype}", "DEBUG")
-        web = WebDownloader(url, filetype)
+        web = WebDownloader(url, filetype, resolution=resolution, codec=codec)
         
         if web.setup_download():
             original_filename = os.path.basename(web.filename)
@@ -325,4 +327,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    app.run(port=8082, debug=True)
+    app.run(port=8084, debug=True)

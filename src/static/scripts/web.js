@@ -88,6 +88,9 @@ function handleFileUpload() {
 function updateFormats() {
     const file_type = document.getElementById('file-type').value.toLowerCase();
     const file_format = document.getElementById('file-format');
+    const resolution_div = document.getElementById('resolution-div');
+    const codec_div = document.getElementById('codec-div');
+
     file_format.innerHTML = '';
 
     formats[file_type].forEach(format => {
@@ -96,6 +99,16 @@ function updateFormats() {
         option.textContent = format;
         file_format.appendChild(option);
     });
+
+    if (resolution_div && codec_div) {
+        if ((media === "Youtube" || media === "TikTok" || media === "Reddit") && file_type === "video") {
+            resolution_div.style.display = 'block';
+            codec_div.style.display = 'block';
+        } else {
+            resolution_div.style.display = 'none';
+            codec_div.style.display = 'none';
+        }
+    }
 }
 
 function handleEnterEvent() {

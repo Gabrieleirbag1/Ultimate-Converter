@@ -81,7 +81,7 @@ class YoutubeDownloader():
     :param str final_file_name: Final name of the downloaded file
     :param list[str] medias_list: List of media files downloaded in a playlist
     """
-    def __init__(self, url: str, output_path: str, quality: str ='highest', media: str ='video', format: str ='mp4') -> None:
+    def __init__(self, url: str, output_path: str, quality: str ='highest', media: str ='video', format: str ='mp4', resolution: str ='best', codec: str ='best') -> None:
         """Initialize the YoutubeDownloader class
         
         :param str url: URL of the youtube video or playlist
@@ -89,6 +89,8 @@ class YoutubeDownloader():
         :param str quality: Quality of the video
         :param str media: Type of media to download
         :param str format: Format to convert the media to
+        :param str resolution: Resolution of the video
+        :param str codec: Codec of the video
         
         :return: None"""
         super().__init__()
@@ -97,9 +99,23 @@ class YoutubeDownloader():
         self.quality = quality
         self.media = media
         self.format = format
+        self.resolution = resolution
+        self.codec = codec
 
         self.final_file_name: str
         self.medias_list: list[str] = []
+
+    def get_yt_dlp_format(self) -> str:
+        """Generate yt-dlp format string based on user parameters"""
+        video_format = 'bestvideo'
+        
+        if hasattr(self, 'resolution') and self.resolution != 'best':
+            video_format += f"[height<={self.resolution}]"
+        
+        if hasattr(self, 'codec') and self.codec != 'best':
+            video_format += f"[vcodec^={self.codec}]"
+            
+        return f"{video_format}+bestaudio/best"
 
     def download(self):
         """Download the youtube video or playlist"""
@@ -125,7 +141,7 @@ class YoutubeDownloader():
         """Download a single youtube video"""
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
+            'format': self.get_yt_dlp_format(),
             'outtmpl': os.path.join(self.output_path, f'%(title)s_{timestamp}.%(ext)s'),
         }
 
@@ -142,7 +158,7 @@ class YoutubeDownloader():
         """Download a youtube playlist"""
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
+            'format': self.get_yt_dlp_format(),
             'outtmpl': os.path.join(self.output_path, f'%(playlist)s_{timestamp}/%(title)s.%(ext)s'),
         }
 
@@ -556,9 +572,11 @@ class SpotifyDownloader:
             self.final_file_name = file_manager.zip_final_filename
 
 class WebDownloader:
-    def __init__(self, url, format):
+    def __init__(self, url, format, resolution='best', codec='best'):
         self.url = url
         self.format = format
+        self.resolution = resolution
+        self.codec = codec
         
         self.filename: str
         self.medias_list: list[str] = []
@@ -567,7 +585,7 @@ class WebDownloader:
     def setup_download(self):
         log(self.url, "DEBUG")
         if 'youtube.com' in self.url or 'youtu.be' in self.url or 'tiktok.com' in self.url or 'reddit.com' in self.url:
-            web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format)
+            web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format, resolution=self.resolution, codec=self.codec)
             web_dl.download()
         elif 'twitter.com' in self.url or 'x.com' in self.url:
             web_dl = TwitterDownloader(self.url, self.output_path, format=self.format)
