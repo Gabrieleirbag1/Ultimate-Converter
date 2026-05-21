@@ -566,7 +566,7 @@ class WebDownloader:
 
     def setup_download(self):
         log(self.url, "DEBUG")
-        if 'youtube.com' in self.url or 'youtu.be' in self.url:
+        if 'youtube.com' in self.url or 'youtu.be' in self.url or 'tiktok.com' in self.url or 'reddit.com' in self.url:
             web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format)
             web_dl.download()
         elif 'twitter.com' in self.url or 'x.com' in self.url:

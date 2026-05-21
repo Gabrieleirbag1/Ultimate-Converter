@@ -1,6 +1,10 @@
 function checkUrlWebsite(url) {
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         return "Youtube";
+    } else if (url.includes('tiktok.com')) {
+        return "TikTok";
+    } else if (url.includes('reddit.com')) {
+        return "Reddit";
     } else if (url.includes('twitter.com') || url.includes('x.com')) {
         return "Twitter";
     } else if (url.includes('instagram.com')) {
@@ -38,7 +42,7 @@ function handleFileUpload() {
 
     file_type.innerHTML = '';
 
-    if (media == "Youtube"){
+    if (media == "Youtube" || media == "TikTok" || media == "Reddit"){
         types = ["Video", "Audio"]
     }
 
