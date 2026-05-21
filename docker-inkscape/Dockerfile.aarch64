@@ -22,6 +22,12 @@ RUN \
   fi && \
   apk add --no-cache \
     inkscape==${INKSCAPE_VERSION} \
+    ghostscript \
+    py3-numpy \
+    py3-lxml \
+    py3-tinycss2 \
+    py3-cssselect \
+    py3-pillow \
     py3-appdirs \
     py3-gobject3 \
     py3-requests && \

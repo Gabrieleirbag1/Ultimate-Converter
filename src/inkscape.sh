@@ -12,4 +12,4 @@ docker run -d \
   -p 3001:3001 \
   -v "$SCRIPT_DIR:$SCRIPT_DIR" -w "$SCRIPT_DIR" \
   --restart unless-stopped \
-  lscr.io/linuxserver/inkscape:latest
+  inkscape:latest
