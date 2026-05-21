@@ -102,8 +102,8 @@ function updateFormats() {
 
     if (resolution_div && codec_div) {
         if ((media === "Youtube") && file_type === "video") {
-            resolution_div.style.display = 'block';
-            codec_div.style.display = 'block';
+            resolution_div.style.display = 'flex';
+            codec_div.style.display = 'flex';
         } else {
             resolution_div.style.display = 'none';
             codec_div.style.display = 'none';
