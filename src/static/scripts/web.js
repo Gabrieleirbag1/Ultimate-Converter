@@ -101,7 +101,7 @@ function updateFormats() {
     });
 
     if (resolution_div && codec_div) {
-        if ((media === "Youtube" || media === "TikTok" || media === "Reddit") && file_type === "video") {
+        if ((media === "Youtube") && file_type === "video") {
             resolution_div.style.display = 'block';
             codec_div.style.display = 'block';
         } else {
