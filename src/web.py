@@ -113,7 +113,7 @@ class YoutubeDownloader():
 
         :param str extension: Extension of the downloaded file"""
         file_path = os.path.join(self.output_path, self.final_file_name)
-        if self.format != extension:
+        if self.format != extension or 'tiktok.com' in self.url:
             converter = ClassicConverter(file_path, self.format)
             if not converter.convert():
                 log(f"Error converting file: {self.final_file_name}", "ERROR")
