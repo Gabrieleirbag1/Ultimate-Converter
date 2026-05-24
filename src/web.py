@@ -586,20 +586,24 @@ class WebDownloader:
         log(self.url, "DEBUG")
         url_lower = self.url.lower()
         log(url_lower, "DEBUG")
-        if 'youtube' in url_lower or 'youtu.be' in url_lower or 'tiktok' in url_lower or 'reddit' in url_lower:
-            web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format, resolution=self.resolution, codec=self.codec)
-            web_dl.download()
-        elif 'twitter' in url_lower or 'x.com' in url_lower:
-            web_dl = TwitterDownloader(self.url, self.output_path, format=self.format)
-            web_dl.download()
-        elif 'instagram' in url_lower:
-            web_dl = InstagramDownloader(self.url, self.output_path, format=self.format)
-            web_dl.download()
-        elif 'spotify' in url_lower:
-            web_dl = SpotifyDownloader(self.url, self.output_path, format=self.format)
-            web_dl.download()
-        else:
+        try:
+            if 'youtube' in url_lower or 'youtu.be' in url_lower or 'tiktok' in url_lower or 'reddit' in url_lower:
+                web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format, resolution=self.resolution, codec=self.codec)
+                web_dl.download()
+            elif 'twitter' in url_lower or 'x.com' in url_lower:
+                web_dl = TwitterDownloader(self.url, self.output_path, format=self.format)
+                web_dl.download()
+            elif 'instagram' in url_lower:
+                web_dl = InstagramDownloader(self.url, self.output_path, format=self.format)
+                web_dl.download()
+            elif 'spotify' in url_lower:
+                web_dl = SpotifyDownloader(self.url, self.output_path, format=self.format)
+                web_dl.download()
+            else:
+                return None
+            self.filename = web_dl.final_file_name
+            self.medias_list = web_dl.medias_list
+            return True
+        except Exception as e:
+            log(f"Server error during download: {e}", "CRITICAL")
             return None
-        self.filename = web_dl.final_file_name
-        self.medias_list = web_dl.medias_list
-        return True
