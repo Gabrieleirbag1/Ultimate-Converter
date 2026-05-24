@@ -1,15 +1,16 @@
 function checkUrlWebsite(url) {
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) {
         return "Youtube";
-    } else if (url.includes('tiktok.com')) {
+    } else if (lowerUrl.includes('tiktok')) {
         return "TikTok";
-    } else if (url.includes('reddit.com')) {
+    } else if (lowerUrl.includes('reddit')) {
         return "Reddit";
-    } else if (url.includes('twitter.com') || url.includes('x.com')) {
+    } else if (lowerUrl.includes('twitter') || lowerUrl.includes('x.com')) {
         return "Twitter";
-    } else if (url.includes('instagram.com')) {
+    } else if (lowerUrl.includes('instagram')) {
         return "Instagram";
-    } else if (url.includes('spotify.com')) {
+    } else if (lowerUrl.includes('spotify')) {
         return "Spotify";
     } else {
         return null;
@@ -17,12 +18,13 @@ function checkUrlWebsite(url) {
 }
 
 function checkInstagramUrl(url) {
-    if (url.includes('instagram.com')) {
-        if (url.match(/\/reel\//)) {
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('instagram')) {
+        if (lowerUrl.match(/\/reel\//)) {
             return "Reel";
-        } else if (url.match(/\/p\//)) {
+        } else if (lowerUrl.match(/\/p\//)) {
             return "Photo";
-        } else if (url.match(/\/tv\//)) {
+        } else if (lowerUrl.match(/\/tv\//)) {
             return "Video";
         } else {
             return "Unknown";

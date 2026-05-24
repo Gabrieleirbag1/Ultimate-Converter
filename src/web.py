@@ -584,16 +584,18 @@ class WebDownloader:
 
     def setup_download(self):
         log(self.url, "DEBUG")
-        if 'youtube.com' in self.url or 'youtu.be' in self.url or 'tiktok.com' in self.url or 'reddit.com' in self.url:
+        url_lower = self.url.lower()
+        log(url_lower, "DEBUG")
+        if 'youtube' in url_lower or 'youtu.be' in url_lower or 'tiktok' in url_lower or 'reddit' in url_lower:
             web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format, resolution=self.resolution, codec=self.codec)
             web_dl.download()
-        elif 'twitter.com' in self.url or 'x.com' in self.url:
+        elif 'twitter' in url_lower or 'x.com' in url_lower:
             web_dl = TwitterDownloader(self.url, self.output_path, format=self.format)
             web_dl.download()
-        elif 'instagram.com' in self.url:
+        elif 'instagram' in url_lower:
             web_dl = InstagramDownloader(self.url, self.output_path, format=self.format)
             web_dl.download()
-        elif 'spotify.com' in self.url:
+        elif 'spotify' in url_lower:
             web_dl = SpotifyDownloader(self.url, self.output_path, format=self.format)
             web_dl.download()
         else:
