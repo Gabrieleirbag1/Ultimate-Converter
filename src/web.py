@@ -3,6 +3,7 @@ import random, os, re, sys, requests, subprocess, string, zipfile, uuid, time
 from urllib.parse import urlparse, parse_qs, unquote
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from unidecode.x000 import data
 from logs import log
 from converter import ClassicConverter
 from yt_dlp import YoutubeDL
@@ -11,6 +12,59 @@ from utils import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
 REDDIT_HEADERS = {
     "User-Agent": "python:reddit-downloader:v1.0 (Ultimate Converter)"
 }
+
+class BaseDownloader():
+    """Base class for downloading media from the web
+    
+    :param str url: URL of the media to download
+    :param str output_path: Path to save the downloaded media
+    :param str format: Format of the downloaded media"""
+    def __init__(self, url: str, output_path: str, format: str) -> None:
+        self.url = url
+        self.output_path = output_path
+        self.format = format
+
+        self.final_file_name: str
+        self.medias_list: list[str] = []
+
+    def convert_file(self, extension: str):
+        """Convert the downloaded file to a different format
+        
+        :param str extension: Extension of the downloaded file"""
+        if self.format != extension:
+            converter = ClassicConverter(self.final_file_name, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {self.final_file_name}", "ERROR")
+            if os.path.exists(self.final_file_name):
+                os.remove(self.final_file_name)
+            self.final_file_name = converter.output_file
+    
+    def get_unique_output_file(self, base_name: str, extension: str) -> str:
+        """Get a unique name for the output file
+
+        :param str base_name: Base name of the file
+        :param str extension: Extension of the file
+
+        :return: Unique name for the output file
+        :rtype: str"""
+        output_file = os.path.join(self.output_path, f"{base_name}.{extension}")
+        while os.path.exists(output_file):
+            random_number = random.randint(1, 10000)
+            output_file = os.path.join(self.output_path, f"{base_name}_{random_number}.{extension}")
+        return output_file
+
+    def generate_file_name(self, file_name: str, extension: str):
+        """Generate a unique file name for the downloaded media
+        
+        :param str file_name: Name of the media file
+        :param str extension: Extension of the media file"""
+        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
+        log(f"Base name: {base_name}", "DEBUG")
+        if str.isspace(base_name) or not base_name:
+            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        if len(base_name) > 50:
+            base_name = base_name[:50]
+        self.final_file_name = self.get_unique_output_file(base_name, extension)
 
 class FileManager:
     """Class to manage the files downloaded from the web
@@ -75,7 +129,7 @@ class FileManager:
                     continue
                 self.remove_uploaded_file(file_path)
 
-class YoutubeDownloader():
+class YoutubeDownloader(BaseDownloader):
     """Class to download youtube videos and playlists
     
     :param str url: URL of the youtube video or playlist
@@ -98,12 +152,9 @@ class YoutubeDownloader():
         :param str codec: Codec of the video
         
         :return: None"""
-        super().__init__()
-        self.url = url
-        self.output_path = output_path
+        super().__init__(url, output_path, format)
         self.quality = quality
         self.media = media
-        self.format = format
         self.resolution = resolution
         self.codec = codec
 
@@ -190,7 +241,7 @@ class YoutubeDownloader():
             os.rmdir(playlist_dir)
         log(f"Downloaded playlist: {info_dict['title']}", "INFO")
 
-class InstagramDownloader:
+class InstagramDownloader(BaseDownloader):
     """Class to download instagram posts
     
     :param str url: URL of the instagram post
@@ -207,9 +258,8 @@ class InstagramDownloader:
         :param str format: Format to convert the media to
         
         :return: None"""
-        self.url = url
-        self.output_path = output_path
-        self.format = format
+        super().__init__(url, output_path, format)
+
         self.loader = Instaloader()
 
         self.final_file_name: str
@@ -222,18 +272,6 @@ class InstagramDownloader:
             self.download_video(post)
         else:
             self.download_image(post)
-        
-    def convert_file(self, extension: str):
-        """Convert the downloaded file to a different format
-        
-        :param str extension: Extension of the downloaded file"""
-        if self.format != extension:
-            converter = ClassicConverter(self.final_file_name, self.format)
-            if not converter.convert():
-                log(f"Error converting file: {self.final_file_name}", "ERROR")
-            if os.path.exists(self.final_file_name):
-                os.remove(self.final_file_name)
-            self.final_file_name = converter.output_file
 
     def download_video(self, post: str):
         """Download the video from the instagram post
@@ -259,19 +297,6 @@ class InstagramDownloader:
         image_url = post.url
         self.download_file(image_url, post, extension)
 
-    def generate_file_name(self, file_name: str, extension: str):
-        """Generate a unique file name for the downloaded media
-        
-        :param str file_name: Name of the media file
-        :param str extension: Extension of the media file"""
-        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
-        log(f"Base name: {base_name}", "DEBUG")
-        if str.isspace(base_name) or not base_name:
-            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        if len(base_name) > 50:
-            base_name = base_name[:50]
-        self.final_file_name = self.get_unique_output_file(base_name, extension)
-
     def download_file(self, file_url: str, post: Post, extension: str):
         """Download the media file from the URL
         
@@ -284,21 +309,7 @@ class InstagramDownloader:
         self.loader.download_pic(self.final_file_name.rsplit(".", 1)[0], file_url, post.date_utc)
         self.convert_file(extension)
 
-    def get_unique_output_file(self, base_name: str, extension: str) -> str:
-        """Get a unique name for the output file
-        
-        :param str base_name: Base name of the file
-        :param str extension: Extension of the file
-        
-        :return: Unique name for the output file
-        :rtype: str"""
-        output_file = os.path.join(self.output_path, f'{base_name}_converted.{extension}')
-        while os.path.exists(output_file):
-            random_number = random.randint(1, 10000)
-            output_file = os.path.join(self.output_path, f'{base_name}_converted_{random_number}.{extension}')
-        return output_file
-
-class TwitterDownloader:
+class TwitterDownloader(BaseDownloader):
     """Class to download twitter videos
     
     :param str url: URL of the twitter post
@@ -315,10 +326,7 @@ class TwitterDownloader:
         :param str format: Format to convert the media to
         
         :return: None"""
-        self.url = url
-        self.output_path = output_path
-        self.format = format
-
+        super().__init__(url, output_path, format)
         self.final_file_name: str
         self.medias_list: list[str] = []
 
@@ -338,7 +346,10 @@ class TwitterDownloader:
             self.download_gif()
             return
 
-        self.generate_file_name(data)
+        file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
+        file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + f".{self.format}"  # Remove special characters from file name
+        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
+        self.generate_file_name(base_name, "mp4")
         self.download_video(highest_quality_url, self.final_file_name)
 
     def download_gif(self):
@@ -346,32 +357,6 @@ class TwitterDownloader:
         web_dl.download()
         self.final_file_name = web_dl.final_file_name
         self.medias_list = web_dl.medias_list
-
-    def convert_file(self, extension: str):
-        """Convert the downloaded file to a different format
-        
-        :param str extension: Extension of the downloaded file"""
-        if self.format != extension:
-            converter = ClassicConverter(self.final_file_name, self.format)
-            if not converter.convert():
-                log(f"Error converting file: {self.final_file_name}", "ERROR")
-            if os.path.exists(self.final_file_name):
-                os.remove(self.final_file_name)
-            self.final_file_name = converter.output_file
-
-    def get_unique_output_file(self, base_name: str, extension: str) -> str:
-        """Get a unique name for the output file
-        
-        :param str base_name: Base name of the file
-        :param str extension: Extension of the file
-        
-        :return: Unique name for the output file
-        :rtype: str"""
-        output_file = os.path.join(self.output_path, f'{base_name}.{extension}')
-        while os.path.exists(output_file):
-            random_number = random.randint(1, 10000)
-            output_file = os.path.join(self.output_path, f'{base_name}_{random_number}.{extension}')
-        return output_file
 
     def download_video(self, url: str, file_name: str):
         """Download a video from a URL into a filename.
@@ -395,20 +380,6 @@ class TwitterDownloader:
         log(f"Downloaded {file_name} from {url}", "INFO")
         self.convert_file("mp4")
 
-    def generate_file_name(self, data: str):
-        """Generate a unique file name for the downloaded media
-        
-        :param str data: Data from the twitter post"""
-        file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text  # Video file name
-        file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + f".{self.format}"  # Remove special characters from file name
-        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
-        if str.isspace(base_name) or not base_name:
-            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        if len(base_name) > 50:
-            base_name = base_name[:50]
-        log(f"Base name: {base_name}", "DEBUG")
-        self.final_file_name = self.get_unique_output_file(base_name, "mp4")
-
     def check_url_website(self):
         """Check if the URL is a valid Twitter video URL"""
         if len(sys.argv) < 2:
@@ -420,7 +391,7 @@ class TwitterDownloader:
             else:
                 log("Invalid Twitter video URL provided.", "ERROR")
 
-class RedditDownloader:
+class RedditDownloader(BaseDownloader):
     """Class to download reddit media
 
     :param str url: URL of the reddit media
@@ -429,10 +400,7 @@ class RedditDownloader:
     :param str final_file_name: Final name of the downloaded file
     """
     def __init__(self, url: str, output_path: str, format: str = "mp4") -> None:
-        self.url = url
-        self.output_path = output_path
-        self.format = format
-
+        super().__init__(url, output_path, format)
         self.final_file_name: str
         self.medias_list: list[str] = []
 
@@ -443,19 +411,6 @@ class RedditDownloader:
         self.generate_file_name(os.path.basename(download_url), extension)
         self.download_file(download_url, self.final_file_name)
         self.convert_file(extension)
-
-    def generate_file_name(self, file_name: str, extension: str):
-        """Generate a unique file name for the downloaded media
-        
-        :param str file_name: Name of the media file
-        :param str extension: Extension of the media file"""
-        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
-        log(f"Base name: {base_name}", "DEBUG")
-        if str.isspace(base_name) or not base_name:
-            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        if len(base_name) > 50:
-            base_name = base_name[:50]
-        self.final_file_name = self.get_unique_output_file(base_name, extension)
 
     def normalize_url(self, url: str) -> str:
         """
@@ -590,32 +545,6 @@ class RedditDownloader:
         if url.endswith('.png'):
             return 'png'
         return self.format
-
-    def convert_file(self, extension: str):
-        """Convert the downloaded file to a different format.
-
-        :param str extension: Extension of the downloaded file"""
-        if self.format != extension:
-            converter = ClassicConverter(self.final_file_name, self.format)
-            if not converter.convert():
-                log(f"Error converting file: {self.final_file_name}", "ERROR")
-            if os.path.exists(self.final_file_name):
-                os.remove(self.final_file_name)
-            self.final_file_name = converter.output_file
-
-    def get_unique_output_file(self, base_name: str, extension: str) -> str:
-        """Get a unique name for the output file
-
-        :param str base_name: Base name of the file
-        :param str extension: Extension of the file
-
-        :return: Unique name for the output file
-        :rtype: str"""
-        output_file = os.path.join(self.output_path, f"{base_name}.{extension}")
-        while os.path.exists(output_file):
-            random_number = random.randint(1, 10000)
-            output_file = os.path.join(self.output_path, f"{base_name}_{random_number}.{extension}")
-        return output_file
 
     def download_file(self, url: str, output_file: str):
         """Download a file from a URL into a filename.
