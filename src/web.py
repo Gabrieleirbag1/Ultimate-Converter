@@ -677,7 +677,7 @@ class SpotifyDownloader:
             
             if self.type == 'track':
                 self.set_final_file_name_for_track()
-                self.convert_file(self.final_file_name, "mp3")
+                self.final_file_name = self.convert_file(self.final_file_name, os.path.basename(self.final_file_name.rsplit('.', 1)[1]))
             else:
                 self.set_medias_list_for_album_or_playlist(output)
                 self.create_zip_for_album_or_playlist()
