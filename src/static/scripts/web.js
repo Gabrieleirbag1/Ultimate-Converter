@@ -45,7 +45,7 @@ function handleFileUpload() {
     file_type.innerHTML = '';
 
     if (media == "Youtube" || media == "TikTok" || media == "Reddit"){
-        types = ["Video", "Audio"]
+        types = ["Video", "Audio", "Image"]
     }
 
     else if (media == "Instagram"){

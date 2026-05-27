@@ -1,5 +1,6 @@
 from instaloader import Post, Instaloader
 import random, os, re, sys, requests, subprocess, string, zipfile, uuid, time
+from urllib.parse import urlparse, parse_qs, unquote
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from logs import log
@@ -415,6 +416,127 @@ class TwitterDownloader:
             else:
                 log("Invalid Twitter video URL provided.", "ERROR")
 
+class RedditDownloader:
+    """Class to download reddit media
+
+    :param str url: URL of the reddit media
+    :param str output_path: Path to save the downloaded media
+    :param str format: Format to convert the media to
+    :param str final_file_name: Final name of the downloaded file
+    """
+    def __init__(self, url: str, output_path: str, format: str = "mp4") -> None:
+        self.url = url
+        self.output_path = output_path
+        self.format = format
+
+        self.final_file_name: str
+        self.medias_list: list[str] = []
+
+    def download(self):
+        """Download a reddit media file using direct requests."""
+        download_url = self.normalize_url(self.url)
+        extension = self.get_extension(download_url)
+        self.generate_file_name(os.path.basename(download_url), extension)
+        self.download_file(download_url, self.final_file_name)
+        self.convert_file(extension)
+
+    def generate_file_name(self, file_name: str, extension: str):
+        """Generate a unique file name for the downloaded media
+        
+        :param str file_name: Name of the media file
+        :param str extension: Extension of the media file"""
+        base_name = re.sub(r'[|:*?"<>\\/]', '_', file_name.rsplit('.', 1)[0])
+        log(f"Base name: {base_name}", "DEBUG")
+        if str.isspace(base_name) or not base_name:
+            base_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        if len(base_name) > 50:
+            base_name = base_name[:50]
+        self.final_file_name = self.get_unique_output_file(base_name, extension)
+
+    def normalize_url(self, url: str) -> str:
+        """Normalize and update reddit preview URLs for downloadable media."""
+        decoded = None
+        parsed = urlparse(url)
+        if 'reddit.com' in parsed.netloc and 'url' in parse_qs(parsed.query):
+            url = parse_qs(parsed.query)['url'][0]
+            
+            url = unquote(url)
+            
+            base_url = url.split('?')[0] 
+            if 'format=mp4' not in url and base_url.endswith('.gif'):
+                url = url.replace('.gif', '.gif?format=mp4&s=')
+        else:
+            decoded = (
+                url.replace('%3A', ':')
+                .replace('%2F', '/')
+                .replace('%3F', '?')
+                .replace('%3D', '=')
+                .replace('%26', '&')
+            )
+
+            if 'format=mp4' not in decoded and decoded.endswith('.gif'):
+                decoded = decoded.replace('.gif', '.gif?format=mp4&s=')
+
+        return decoded if decoded else url
+
+    def get_extension(self, url: str) -> str:
+        """Infer the extension from the url and format settings."""
+        if 'format=mp4' in url:
+            return 'mp4'
+        if url.endswith('.gif'):
+            return 'gif'
+        if url.endswith('.jpg') or url.endswith('.jpeg'):
+            return 'jpg'
+        if url.endswith('.png'):
+            return 'png'
+        return self.format
+
+    def convert_file(self, extension: str):
+        """Convert the downloaded file to a different format.
+
+        :param str extension: Extension of the downloaded file"""
+        if self.format != extension:
+            converter = ClassicConverter(self.final_file_name, self.format)
+            if not converter.convert():
+                log(f"Error converting file: {self.final_file_name}", "ERROR")
+            if os.path.exists(self.final_file_name):
+                os.remove(self.final_file_name)
+            self.final_file_name = converter.output_file
+
+    def get_unique_output_file(self, base_name: str, extension: str) -> str:
+        """Get a unique name for the output file
+
+        :param str base_name: Base name of the file
+        :param str extension: Extension of the file
+
+        :return: Unique name for the output file
+        :rtype: str"""
+        output_file = os.path.join(self.output_path, f"{base_name}.{extension}")
+        while os.path.exists(output_file):
+            random_number = random.randint(1, 10000)
+            output_file = os.path.join(self.output_path, f"{base_name}_{random_number}.{extension}")
+        return output_file
+
+    def download_file(self, url: str, output_file: str):
+        """Download a file from a URL into a filename.
+
+        :param str url: URL of the file
+        :param str output_file: Name of the output file
+        """
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        total_size = int(response.headers.get("content-length", 0))
+        block_size = 1024
+        progress_bar = tqdm(total=total_size, unit="B", unit_scale=True, colour="red")
+
+        with open(output_file, "wb") as file:
+            for data in response.iter_content(block_size):
+                progress_bar.update(len(data))
+                file.write(data)
+
+        progress_bar.close()
+        log(f"Downloaded {output_file} from {url}", "INFO")
+
 class SpotifyDownloader:
     def __init__(self, url, output_path, format):
         self.url = url
@@ -587,8 +709,11 @@ class WebDownloader:
         url_lower = self.url.lower()
         log(url_lower, "DEBUG")
         try:
-            if 'youtube' in url_lower or 'youtu.be' in url_lower or 'tiktok' in url_lower or 'reddit' in url_lower:
+            if 'youtube' in url_lower or 'youtu.be' in url_lower or 'tiktok' in url_lower:
                 web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format, resolution=self.resolution, codec=self.codec)
+                web_dl.download()
+            elif 'reddit' in url_lower:
+                web_dl = RedditDownloader(self.url, self.output_path, format=self.format)
                 web_dl.download()
             elif 'twitter' in url_lower or 'x.com' in url_lower:
                 web_dl = TwitterDownloader(self.url, self.output_path, format=self.format)
@@ -605,5 +730,5 @@ class WebDownloader:
             self.medias_list = web_dl.medias_list
             return True
         except Exception as e:
-            log(f"Server error during download: {e}", "CRITICAL")
+            log(f"Server error during download: {e}", level="CRITICAL")
             return None
