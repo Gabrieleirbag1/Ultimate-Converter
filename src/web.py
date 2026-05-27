@@ -8,6 +8,10 @@ from converter import ClassicConverter
 from yt_dlp import YoutubeDL
 from utils import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
 
+REDDIT_HEADERS = {
+    "User-Agent": "python:reddit-downloader:v1.0 (Ultimate Converter)"
+}
+
 class FileManager:
     """Class to manage the files downloaded from the web
 
@@ -454,30 +458,126 @@ class RedditDownloader:
         self.final_file_name = self.get_unique_output_file(base_name, extension)
 
     def normalize_url(self, url: str) -> str:
-        """Normalize and update reddit preview URLs for downloadable media."""
-        decoded = None
+        """
+        Normalize Reddit URLs into a directly downloadable form.
+
+        Supported input types:
+        1. v.redd.it / hosted video post  → yt-dlp
+        2. reddit.com/r/.../s/<id>        → short share link, resolve via JSON API
+        3. reddit.com/r/.../comments/<id>/comment/<cid>  → comment, resolve via JSON API
+        4. reddit.com/r/.../comments/<id>/...  → post, resolve via JSON API
+        5. reddit.com/media?url=<encoded> → unwrap, then treat as preview URL
+        6. preview.redd.it/...            → ensure format=mp4 for GIFs
+        7. i.redd.it/...                  → direct static image, pass through
+        """
         parsed = urlparse(url)
-        if 'reddit.com' in parsed.netloc and 'url' in parse_qs(parsed.query):
-            url = parse_qs(parsed.query)['url'][0]
-            
-            url = unquote(url)
-            
-            base_url = url.split('?')[0] 
-            if 'format=mp4' not in url and base_url.endswith('.gif'):
-                url = url.replace('.gif', '.gif?format=mp4&s=')
-        else:
-            decoded = (
-                url.replace('%3A', ':')
-                .replace('%2F', '/')
-                .replace('%3F', '?')
-                .replace('%3D', '=')
-                .replace('%26', '&')
+        netloc = parsed.netloc
+        path = parsed.path
+
+        # ── 1. Hosted Reddit video (v.redd.it or is_video post) ──────────────
+        if "v.redd.it" in netloc:
+            YoutubeDownloader(url, self.output_path, format=self.format).download_video()
+            return url  # already handled
+
+        # ── 2. Short share link  reddit.com/r/<sub>/s/<id> ───────────────────
+        if re.match(r"^/r/\w+/s/\w+", path):
+            resolved = self._resolve_reddit_share(url)
+            return self.normalize_url(resolved)  # recurse with the real URL
+
+        # ── 3 & 4. Comment or post page ──────────────────────────────────────
+        post_match = re.match(r"^/r/\w+/comments/(\w+)", path)
+        if post_match and "reddit.com" in netloc:
+            post_id = post_match.group(1)
+            comment_match = re.search(r"/comment/(\w+)", path)
+            comment_id = comment_match.group(1) if comment_match else None
+            media_url = self._extract_media_from_post(post_id, comment_id)
+            return self.normalize_url(media_url)  # recurse: might be preview or v.redd.it
+
+        # ── 5. reddit.com/media?url=<encoded preview URL> ────────────────────
+        if path == "/media" and "reddit.com" in netloc:
+            inner = parse_qs(parsed.query).get("url", [None])[0]
+            if inner:
+                return self.normalize_url(unquote(inner))  # recurse with unwrapped URL
+
+        # ── 6. preview.redd.it — ensure GIFs are served as mp4 ───────────────
+        if "preview.redd.it" in netloc:
+            return self._ensure_mp4(url)
+
+        # ── 7. i.redd.it — direct static image, nothing to do ────────────────
+        if "i.redd.it" in netloc:
+            return url
+
+        # Fallback: best-effort decode and return
+        return unquote(url)
+
+
+    def _resolve_reddit_share(self, share_url: str) -> str:
+        """
+        Follow a short share link (reddit.com/r/<sub>/s/<id>) to its canonical
+        post URL without downloading the page body.
+        """
+        try:
+            r = requests.head(
+                share_url, headers=REDDIT_HEADERS,
+                allow_redirects=True, timeout=10
             )
+            return r.url  # final URL after all redirects
+        except requests.RequestException as e:
+            raise ValueError(f"Could not resolve Reddit share URL {share_url}: {e}")
 
-            if 'format=mp4' not in decoded and decoded.endswith('.gif'):
-                decoded = decoded.replace('.gif', '.gif?format=mp4&s=')
 
-        return decoded if decoded else url
+    def _extract_media_from_post(self, post_id: str, comment_id: str | None = None) -> str:
+        """
+        Hit the Reddit JSON API for a post and return its best media URL.
+
+        For comment links the comment_id is passed but the media always lives
+        on the parent post, so we only need the post JSON.
+        """
+        api_url = f"https://www.reddit.com/comments/{post_id}.json?limit=1&raw_json=1"
+        try:
+            r = requests.get(api_url, headers=REDDIT_HEADERS, timeout=10)
+            r.raise_for_status()
+        except requests.RequestException as e:
+            raise ValueError(f"Reddit API request failed for post {post_id}: {e}")
+
+        try:
+            post_data = r.json()[0]["data"]["children"][0]["data"]
+        except (KeyError, IndexError) as e:
+            raise ValueError(f"Unexpected Reddit API response structure: {e}")
+
+        # Priority 1 – native Reddit video (v.redd.it)
+        if post_data.get("is_video"):
+            return post_data["url"]  # normalize_url will route this to yt-dlp
+
+        # Priority 2 – preview GIF/MP4 variants
+        try:
+            variants = (
+                post_data["preview"]["images"][0]["variants"]
+            )
+            # prefer the explicit mp4 variant; fall back to gif source
+            if "mp4" in variants:
+                return variants["mp4"]["source"]["url"]
+            if "gif" in variants:
+                return variants["gif"]["source"]["url"]
+        except (KeyError, IndexError):
+            pass
+
+        # Priority 3 – plain post URL (might be a preview.redd.it or i.redd.it link)
+        post_url = post_data.get("url", "")
+        if post_url:
+            return post_url
+
+        raise ValueError(f"No downloadable media found in post {post_id}")
+
+
+    def _ensure_mp4(self, url: str) -> str:
+        """For preview.redd.it GIF URLs, rewrite to request mp4 delivery."""
+        base = url.split("?")[0]
+        if base.endswith(".gif") and "format=mp4" not in url:
+            # Strip old query string; the 's' signature becomes invalid anyway
+            # when params change, so drop it. Reddit serves unsigned mp4 previews.
+            return base + "?format=mp4"
+        return url
 
     def get_extension(self, url: str) -> str:
         """Infer the extension from the url and format settings."""
@@ -712,7 +812,7 @@ class WebDownloader:
             if 'youtube' in url_lower or 'youtu.be' in url_lower or 'tiktok' in url_lower:
                 web_dl = YoutubeDownloader(self.url, self.output_path, format=self.format, resolution=self.resolution, codec=self.codec)
                 web_dl.download()
-            elif 'reddit' in url_lower:
+            elif 'reddit' in url_lower or 'redd.it' in url_lower:
                 web_dl = RedditDownloader(self.url, self.output_path, format=self.format)
                 web_dl.download()
             elif 'twitter' in url_lower or 'x.com' in url_lower:

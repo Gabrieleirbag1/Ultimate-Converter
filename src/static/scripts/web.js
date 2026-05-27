@@ -4,7 +4,7 @@ function checkUrlWebsite(url) {
         return "Youtube";
     } else if (lowerUrl.includes('tiktok')) {
         return "TikTok";
-    } else if (lowerUrl.includes('reddit')) {
+    } else if (lowerUrl.includes('reddit') || lowerUrl.includes('redd.it')) {
         return "Reddit";
     } else if (lowerUrl.includes('twitter') || lowerUrl.includes('x.com')) {
         return "Twitter";
