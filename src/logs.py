@@ -31,6 +31,7 @@ def log(message: str, level: Optional[str] = "INFO"):
         "INFO": LogColors.OKGREEN,
         "WARNING": LogColors.WARNING,
         "ERROR": LogColors.FAIL,
-        "DEBUG": LogColors.OKCYAN
+        "DEBUG": LogColors.OKCYAN,
+        "CRITICAL": LogColors.HEADER
     }.get(level, LogColors.ENDC)
     print(f"{color}[{level}] {message}{LogColors.ENDC}")
