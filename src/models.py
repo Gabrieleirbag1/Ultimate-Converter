@@ -7,7 +7,7 @@ class DownloadToken(db.Model):
     filename = db.Column(db.String(200), db.ForeignKey('media.filename'), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
 
-    media = db.relationship('Media', backref=db.backref('download_tokens', lazy=True))
+    media = db.relationship('Media', backref=db.backref('download_tokens', lazy=True, cascade='all, delete-orphan'))
 
     def __repr__(self):
         return f'<DownloadToken {self.token}>'
