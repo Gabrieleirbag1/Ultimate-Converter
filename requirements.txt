@@ -70,9 +70,9 @@ snscrape==0.7.0.20230622
 soundcloud-v2==1.6.0
 soupsieve==2.6
 spotapi==1.2.7
-spotdl==4.5.0
+spotdl==4.5.2
 spotipy==2.26.0
-spotipyFree==1.8.1
+spotipyFree==1.9.14
 SQLAlchemy==2.0.36
 starlette==0.27.0
 syncedlyrics==1.0.1
@@ -89,7 +89,7 @@ validators==0.35.0
 websockets==14.2
 Werkzeug==3.1.1
 wrapt==1.16.0
-yt-dlp==2026.3.17
+yt-dlp==2026.8.19
 yt-dlp-ejs==0.8.0
-ytmusicapi==1.12.0
+ytmusicapi==1.12.2
 zipp==3.20.2

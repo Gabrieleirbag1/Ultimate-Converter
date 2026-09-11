@@ -4,6 +4,6 @@ RUN apt update -qq
 
 RUN apt install ffmpeg -y
 
-RUN pip install spotdl==4.5.0
+RUN pip install spotdl==4.5.2
 
 ENTRYPOINT ["spotdl"]
