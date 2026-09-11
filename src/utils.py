@@ -61,7 +61,7 @@ def read_secret_file(filename: str) -> dict:
 _instagram_secrets = read_secret_file('instagram.secret')
 INSTAGRAM_USERNAME = _instagram_secrets.get('USERNAME')
 try:
-    INSTAGRAM_FILENAME = os.path.join(SECRETS_PATH, f'instaloader-session-{INSTAGRAM_USERNAME}')
+    INSTAGRAM_FILENAME = os.path.join(SECRETS_PATH, f'instaloader-session')
 except FileNotFoundError:
     log(f"Instaloader session file for user {INSTAGRAM_USERNAME} not found. Please ensure you have logged in and saved the session.", "WARNING")
     INSTAGRAM_FILENAME = None
