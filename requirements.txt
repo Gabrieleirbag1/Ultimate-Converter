@@ -6,9 +6,11 @@ blinker==1.8.2
 brotli==1.2.0
 browser-cookie3==0.20.1
 certifi==2024.8.30
+cffi==2.1.1
 charset-normalizer==3.4.0
 click==8.1.7
 colorama==0.4.6
+curl_cffi==0.16.3
 dacite==1.8.1
 datastar-py==1.0.0
 decorator==5.3.1
@@ -44,6 +46,7 @@ patool==3.1.0
 pillow==11.3.0
 platformdirs==4.3.6
 proglog==0.1.12
+pycparser==3.0
 pycryptodomex==3.23.0
 pydantic==2.9.2
 pydantic_core==2.23.4
