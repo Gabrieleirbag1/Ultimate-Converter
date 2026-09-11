@@ -1,5 +1,6 @@
 from instaloader import Post, Instaloader
 from logs import log
+from utils import INSTAGRAM_FILENAME, INSTAGRAM_USERNAME
 from base_downloader import BaseDownloader
 
 class InstagramDownloader(BaseDownloader):
@@ -22,7 +23,7 @@ class InstagramDownloader(BaseDownloader):
         super().__init__(url, output_path, format)
 
         self.loader = Instaloader()
-        self.loader.load_session_from_file("dwayne_johnson.therock69")
+        self.loader.load_session_from_file(INSTAGRAM_USERNAME, INSTAGRAM_FILENAME)
 
         self.final_file_name: str
         self.medias_list: list[str] = []
