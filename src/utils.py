@@ -1,3 +1,5 @@
+import os 
+
 AUDIO = ('mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'aiff', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm')
 VIDEO = ('mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf')
 IMAGE = ('jpeg', 'jpg', 'png', 'bmp', 'gif', 'tiff', 'webp', 'pgm', 'ppm', 'pam', 'tga')
@@ -29,5 +31,37 @@ FORMATS = {
     'archive': ARCHIVE
 }
 
-SPOTIFY_CLIENT_ID = ''
-SPOTIFY_CLIENT_SECRET = ''
+SECRETS_PATH = os.path.join(os.path.dirname(__file__), 'secrets')
+
+
+def read_secret_file(filename: str) -> dict:
+    """Parse a KEY=VALUE style .secret file into a dict.
+
+    :param str filename: name of the file inside SECRETS_PATH
+    :return: dict of key/value pairs found in the file
+    """
+    filepath = os.path.join(SECRETS_PATH, filename)
+    values = {}
+
+    if not os.path.isfile(filepath):
+        return values
+
+    with open(filepath, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, _, value = line.partition('=')
+            values[key.strip()] = value.strip()
+
+    return values
+
+# Instagram
+_instagram_secrets = read_secret_file('instagram.secret')
+INSTAGRAM_USERNAME = _instagram_secrets.get('USERNAME')
+INSTAGRAM_FILENAME = os.path.join(SECRETS_PATH, 'instaloader-session')
+
+# Spotify
+_spotify_secrets = read_secret_file('spotify.secret')
+SPOTIFY_CLIENT_ID = _spotify_secrets.get('CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = _spotify_secrets.get('CLIENT_SECRET')
