@@ -22,6 +22,7 @@ class InstagramDownloader(BaseDownloader):
         super().__init__(url, output_path, format)
 
         self.loader = Instaloader()
+        self.loader.load_session_from_file("dwayne_johnson.therock69")
 
         self.final_file_name: str
         self.medias_list: list[str] = []
