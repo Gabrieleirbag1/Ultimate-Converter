@@ -8,3 +8,11 @@ if [ ! -d ".venv" ]; then
 fi
 source .venv/bin/activate
 pip install -r requirements.txt
+
+#generate secrets file (whith empty value for the constants)
+mkdir -p src/secrets
+touch src/secrets/instagram.secret
+touch src/secrets/spotify.secret
+echo "USERNAME=" > src/secrets/instagram.secret
+echo "CLIENT_ID=" > src/secrets/spotify.secret
+echo "CLIENT_SECRET=" >> src/secrets/spotify.secret
