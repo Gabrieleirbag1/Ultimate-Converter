@@ -23,7 +23,7 @@ class InstagramDownloader(BaseDownloader):
         super().__init__(url, output_path, format)
 
         self.loader = Instaloader()
-        self.loader.load_session_from_file(INSTAGRAM_USERNAME, INSTAGRAM_FILENAME)
+        self.loader.load_session_from_file(INSTAGRAM_USERNAME, INSTAGRAM_FILENAME if INSTAGRAM_FILENAME else None)
 
         self.final_file_name: str
         self.medias_list: list[str] = []

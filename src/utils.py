@@ -59,7 +59,10 @@ def read_secret_file(filename: str) -> dict:
 # Instagram
 _instagram_secrets = read_secret_file('instagram.secret')
 INSTAGRAM_USERNAME = _instagram_secrets.get('USERNAME')
-INSTAGRAM_FILENAME = os.path.join(SECRETS_PATH, 'instaloader-session')
+try:
+    INSTAGRAM_FILENAME = os.path.join(SECRETS_PATH, f'instaloader-session-{INSTAGRAM_USERNAME}')
+except FileNotFoundError:
+    INSTAGRAM_FILENAME = None
 
 # Spotify
 _spotify_secrets = read_secret_file('spotify.secret')
