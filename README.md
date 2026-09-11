@@ -28,6 +28,29 @@ Access the web interface at `http://localhost:8084` and follow the instructions 
 bash `docker run --rm -v "$(pwd)/spotdl-errors:/root/.spotdl/errors" spotdl https://open.spotify.com/intl-fr/track/4aKkhZmKHRqW1mYKI0VTtC?si=6c64207e0ed14ba2`
 bash `cat $(ls -t spotdl-errors/ffmpeg_error_*.txt | head -1)`
 
+## Secrets
+
+### Instagram
+Get the instagram session file by logging in with your Instagram account using Instaloader. You can do this by running the following commands:
+```bash
+instaloader --login <instagram_username>
+instaloader --load-cookies <browser> --sessionfile=<path/to/this/repo>/src/secrets/instaloader-session
+
+sudo chown <user>:<group> src/secrets/instaloader-session # for apache deployment with mod_wsgi
+```
+
+### Spotify
+To get the Spotify client ID and client secret, you need to create a Spotify Developer account and register an application. Follow these steps:
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications)
+2. Log in with your Spotify account or create a new one if you don't have an account
+3. Click on "Create an App" and fill in the required information (App name, description, etc.)
+4. Once the app is created, you will be redirected to the app's dashboard. Here, you can find the "Client ID" and "Client Secret" under the "Settings" tab. Copy these values and save them in a secure location.
+5. Find the file src/secrets/spotify.secrets and add the following lines, replacing <client_id> and <client_secret> with the values you copied from the Spotify Developer Dashboard:
+```
+CLIENT_ID=<client_id>
+CLIENT_SECRET=<client_secret>
+```
+
 # Acknowledgments
 - [Inkscape](https://inkscape.org/) - A powerful vector graphics editor used for converting vector files.
 - [AutoTrace](https://github.com/autotrace/autotrace) - A tool for converting bitmap images to vector graphics.
