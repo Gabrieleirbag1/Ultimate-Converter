@@ -1,4 +1,5 @@
 import os 
+from logs import log
 
 AUDIO = ('mp3', 'aac', 'ac3', 'flac', 'wav', 'ogg', 'wma', 'aiff', 'dts', 'eac3', 'm4a', 'mp2', 'opus', 'pcm')
 VIDEO = ('mp4', 'avi', 'mkv', 'mov', 'flv', 'wmv', 'mpeg', 'webm', '3gp', 'asf', 'm4v', 'ts', 'm2ts', 'vob', 'rm', 'swf')
@@ -62,6 +63,7 @@ INSTAGRAM_USERNAME = _instagram_secrets.get('USERNAME')
 try:
     INSTAGRAM_FILENAME = os.path.join(SECRETS_PATH, f'instaloader-session-{INSTAGRAM_USERNAME}')
 except FileNotFoundError:
+    log(f"Instaloader session file for user {INSTAGRAM_USERNAME} not found. Please ensure you have logged in and saved the session.", "WARNING")
     INSTAGRAM_FILENAME = None
 
 # Spotify
